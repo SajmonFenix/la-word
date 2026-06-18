@@ -129,11 +129,12 @@ const ui = {
       const dy = e.touches[0].clientY - startY;
       if (Math.abs(dx) > 10 && Math.abs(dx) > Math.abs(dy)) {
         isDragging = true;
+        e.preventDefault();
         card.classList.add('swiping');
         card.style.transform = `translateX(${dx}px) rotate(${dx * 0.05}deg)`;
         card.style.opacity = Math.max(0, 1 - Math.abs(dx) / 400);
       }
-    }, { passive: true });
+    }, { passive: false });
 
     card.addEventListener('touchend', () => {
       if (!isDragging) return;
