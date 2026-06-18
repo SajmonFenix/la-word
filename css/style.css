@@ -1,0 +1,355 @@
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+:root {
+  --primary: #4A90D9;
+  --bg: #f5f5f5;
+  --card-bg: #ffffff;
+  --text: #333333;
+  --text-secondary: #888888;
+  --radius: 16px;
+  --shadow: 0 4px 20px rgba(0,0,0,0.12);
+}
+
+html, body {
+  height: 100%;
+  overflow: hidden;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+}
+
+#app {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+#header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 20px;
+  background: var(--primary);
+  color: white;
+  flex-shrink: 0;
+}
+
+#header h1 {
+  font-size: 22px;
+  font-weight: 700;
+}
+
+#btn-add {
+  width: 44px;
+  height: 44px;
+  border: none;
+  background: rgba(255,255,255,0.2);
+  color: white;
+  font-size: 28px;
+  border-radius: 50%;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s;
+}
+
+#btn-add:active {
+  background: rgba(255,255,255,0.35);
+}
+
+#main {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  position: relative;
+  overflow: hidden;
+}
+
+#empty-state {
+  text-align: center;
+  color: var(--text-secondary);
+  line-height: 1.6;
+}
+
+#card-container {
+  width: 100%;
+  max-width: 340px;
+  aspect-ratio: 3 / 4;
+  perspective: 1000px;
+}
+
+.card {
+  width: 100%;
+  height: 100%;
+  cursor: pointer;
+  transition: transform 0.3s ease, opacity 0.3s ease;
+  position: relative;
+}
+
+.card.swiping {
+  transition: none;
+}
+
+.card-inner {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+  transform-style: preserve-3d;
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+}
+
+.card.flipped .card-inner {
+  transform: rotateY(180deg);
+}
+
+.card-front, .card-back {
+  position: absolute;
+  inset: 0;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  border-radius: var(--radius);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 32px;
+  background: var(--card-bg);
+}
+
+.card-back {
+  transform: rotateY(180deg);
+}
+
+#card-front-text {
+  font-size: 28px;
+  font-weight: 700;
+  text-align: center;
+  word-break: break-word;
+}
+
+.hint {
+  font-size: 14px;
+  color: white;
+  font-style: italic;
+  margin-top: 12px;
+  text-align: center;
+  opacity: 0.85;
+}
+
+#card-back-text {
+  font-size: 24px;
+  text-align: center;
+  word-break: break-word;
+}
+
+.card-back-actions {
+  position: absolute;
+  bottom: 16px;
+  display: flex;
+  gap: 16px;
+}
+
+.card-back-actions button {
+  background: rgba(0,0,0,0.15);
+  border: none;
+  font-size: 20px;
+  cursor: pointer;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0.8;
+  transition: opacity 0.2s, background 0.2s;
+  backdrop-filter: blur(2px);
+}
+
+.card-back-actions button:active {
+  opacity: 1;
+  background: rgba(0,0,0,0.25);
+}
+
+#card-counter {
+  text-align: center;
+  padding: 12px;
+  font-size: 14px;
+  color: var(--text-secondary);
+  flex-shrink: 0;
+}
+
+#modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.4);
+  display: flex;
+  align-items: flex-end;
+  z-index: 100;
+  transition: opacity 0.2s;
+}
+
+#modal-overlay.hidden {
+  display: none;
+}
+
+#modal {
+  background: white;
+  width: 100%;
+  max-height: 90vh;
+  border-radius: 20px 20px 0 0;
+  padding: 24px;
+  overflow-y: auto;
+}
+
+#modal-title {
+  font-size: 20px;
+  margin-bottom: 20px;
+}
+
+.form-group {
+  margin-bottom: 16px;
+}
+
+.form-group label {
+  display: block;
+  font-size: 14px;
+  color: var(--text-secondary);
+  margin-bottom: 6px;
+}
+
+.form-group input {
+  width: 100%;
+  padding: 12px 14px;
+  border: 2px solid #e0e0e0;
+  border-radius: 10px;
+  font-size: 16px;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.form-group input:focus {
+  border-color: var(--primary);
+}
+
+.input-with-button {
+  display: flex;
+  gap: 8px;
+}
+
+.input-with-button input {
+  flex: 1;
+}
+
+#btn-translate {
+  padding: 8px 14px;
+  border: 2px solid #e0e0e0;
+  border-radius: 10px;
+  background: white;
+  font-size: 18px;
+  cursor: pointer;
+  transition: border-color 0.2s;
+}
+
+#btn-translate:active {
+  border-color: var(--primary);
+}
+
+#color-picker {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.color-option {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  cursor: pointer;
+  border: 3px solid transparent;
+  transition: border-color 0.2s, transform 0.2s;
+}
+
+.color-option.selected {
+  border-color: var(--text);
+  transform: scale(1.15);
+}
+
+.form-actions {
+  display: flex;
+  gap: 12px;
+  margin-top: 20px;
+}
+
+.form-actions button {
+  flex: 1;
+  padding: 14px;
+  border: none;
+  border-radius: 12px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity 0.2s;
+}
+
+.form-actions button:active {
+  opacity: 0.7;
+}
+
+#btn-cancel {
+  background: #f0f0f0;
+  color: var(--text);
+}
+
+#btn-save {
+  background: var(--primary);
+  color: white;
+}
+
+#card-area {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  max-width: 500px;
+}
+
+.nav-arrow {
+  width: 44px;
+  height: 44px;
+  border: none;
+  background: var(--primary);
+  color: white;
+  font-size: 28px;
+  border-radius: 50%;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: opacity 0.2s;
+  line-height: 1;
+}
+
+.nav-arrow:active {
+  opacity: 0.6;
+}
+
+.nav-arrow.hidden {
+  display: none;
+}
+
+.hidden {
+  display: none !important;
+}
