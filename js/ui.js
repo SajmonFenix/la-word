@@ -118,6 +118,7 @@ const ui = {
 
     card.addEventListener('touchstart', (e) => {
       if (this._isFlipped) return;
+      this._wasDragged = false;
       startX = e.touches[0].clientX;
       startY = e.touches[0].clientY;
       isDragging = false;
@@ -137,10 +138,7 @@ const ui = {
     }, { passive: false });
 
     card.addEventListener('touchend', () => {
-      if (!isDragging) {
-        this._wasDragged = false;
-        return;
-      }
+      if (!isDragging) return;
       this._wasDragged = true;
       card.classList.remove('swiping');
       const match = card.style.transform.match(/translateX\((-?\d+)/);
