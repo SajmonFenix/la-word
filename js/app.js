@@ -18,6 +18,7 @@ function bindEvents() {
     if (e.target === e.currentTarget) closeModal();
   });
   document.getElementById('card-form').addEventListener('submit', handleFormSubmit);
+  document.getElementById('btn-delete').addEventListener('click', handleDelete);
   document.getElementById('btn-translate').addEventListener('click', handleTranslate);
   document.getElementById('btn-settings').addEventListener('click', openSettings);
   document.getElementById('btn-settings-close').addEventListener('click', closeSettings);
@@ -33,8 +34,10 @@ function bindEvents() {
 
 function openAddModal(cardData) {
   editingId = cardData?.id || null;
-  document.getElementById('modal-title').textContent = editingId ? 'Upraviť kartu' : 'Nová karta';
-  document.getElementById('btn-save').textContent = editingId ? 'Uložiť' : 'Pridať';
+  const isEdit = !!editingId;
+  document.getElementById('modal-title').textContent = isEdit ? 'Upraviť kartu' : 'Nová karta';
+  document.getElementById('btn-save').textContent = isEdit ? 'Uložiť' : 'Pridať';
+  document.getElementById('btn-delete').classList.toggle('hidden', !isEdit);
   document.getElementById('input-front').value = cardData?.front || '';
   document.getElementById('input-hint').value = cardData?.hint || '';
   document.getElementById('input-back').value = cardData?.back || '';
@@ -88,6 +91,14 @@ function handleFormSubmit(e) {
     return;
   }
 
+  closeModal();
+  ui.refresh();
+}
+
+function handleDelete() {
+  if (!editingId) return;
+  if (!confirm('Naozaj chceš vymazať túto kartu?')) return;
+  cards.delete(editingId);
   closeModal();
   ui.refresh();
 }

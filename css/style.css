@@ -311,6 +311,11 @@ html, body {
   color: var(--text);
 }
 
+.btn-danger {
+  background: #E74C3C !important;
+  color: white !important;
+}
+
 #btn-save {
   background: var(--primary);
   color: white;
