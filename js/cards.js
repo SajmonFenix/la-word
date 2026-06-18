@@ -5,8 +5,8 @@ function generateId() {
 const cards = {
   _items: [],
 
-  init() {
-    this._items = storage.load();
+  async init() {
+    this._items = await storage.load();
     this._notify();
   },
 
@@ -52,8 +52,8 @@ const cards = {
     return this._items.length;
   },
 
-  _persist() {
-    storage.save(this._items);
+  async _persist() {
+    await storage.save(this._items);
     this._notify();
   },
 

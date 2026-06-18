@@ -353,3 +353,101 @@ html, body {
 .hidden {
   display: none !important;
 }
+
+.header-actions {
+  display: flex;
+  gap: 8px;
+}
+
+#btn-settings {
+  width: 44px;
+  height: 44px;
+  border: none;
+  background: rgba(255,255,255,0.2);
+  color: white;
+  font-size: 22px;
+  border-radius: 50%;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s;
+}
+
+#btn-settings:active {
+  background: rgba(255,255,255,0.35);
+}
+
+#settings-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.4);
+  display: flex;
+  align-items: flex-end;
+  z-index: 100;
+  transition: opacity 0.2s;
+}
+
+#settings-overlay.hidden {
+  display: none;
+}
+
+#settings-modal {
+  background: white;
+  width: 100%;
+  max-height: 90vh;
+  border-radius: 20px 20px 0 0;
+  padding: 24px;
+}
+
+#settings-title {
+  font-size: 20px;
+  margin-bottom: 20px;
+}
+
+.settings-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.settings-btn {
+  padding: 14px;
+  border: 2px solid #e0e0e0;
+  border-radius: 12px;
+  background: white;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: border-color 0.2s;
+  text-align: center;
+}
+
+.settings-btn:active {
+  border-color: var(--primary);
+}
+
+.settings-info {
+  font-size: 13px;
+  color: var(--text-secondary);
+  line-height: 1.5;
+  margin-bottom: 16px;
+}
+
+.settings-close {
+  width: 100%;
+  padding: 14px;
+  border: none;
+  border-radius: 12px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  background: #f0f0f0;
+  color: var(--text);
+  transition: opacity 0.2s;
+}
+
+.settings-close:active {
+  opacity: 0.7;
+}

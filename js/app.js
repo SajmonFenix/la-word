@@ -5,8 +5,8 @@ const COLORS = [
 
 let editingId = null;
 
-function init() {
-  cards.init();
+async function init() {
+  await cards.init();
   ui.init();
   bindEvents();
 }
@@ -19,6 +19,13 @@ function bindEvents() {
   });
   document.getElementById('card-form').addEventListener('submit', handleFormSubmit);
   document.getElementById('btn-translate').addEventListener('click', handleTranslate);
+  document.getElementById('btn-settings').addEventListener('click', openSettings);
+  document.getElementById('btn-settings-close').addEventListener('click', closeSettings);
+  document.getElementById('btn-export').addEventListener('click', handleExport);
+  document.getElementById('btn-import').addEventListener('click', handleImport);
+  document.getElementById('settings-overlay').addEventListener('click', (e) => {
+    if (e.target === e.currentTarget) closeSettings();
+  });
   document.addEventListener('cards-change', () => {
     ui.refresh();
   });
@@ -116,6 +123,46 @@ async function handleTranslate() {
     translateBtn.textContent = '🌐';
     translateBtn.disabled = false;
   }
+}
+
+function openSettings() {
+  document.getElementById('settings-overlay').classList.remove('hidden');
+}
+
+function closeSettings() {
+  document.getElementById('settings-overlay').classList.add('hidden');
+}
+
+function handleExport() {
+  const json = storage.exportData();
+  const blob = new Blob([json], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'la-word-backup.json';
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+async function handleImport() {
+  const input = document.createElement('input');
+  input.type = 'file';
+  input.accept = '.json';
+  input.onchange = async () => {
+    const file = input.files[0];
+    if (!file) return;
+    try {
+      const text = await file.text();
+      await storage.importData(text);
+                    await cards.init();
+                    ui.init();
+      closeSettings();
+      alert('Karty boli úspešne importované.');
+    } catch {
+      alert('Chyba: neplatný súbor.');
+    }
+  };
+  input.click();
 }
 
 function injectEditButton() {

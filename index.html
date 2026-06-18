@@ -14,7 +14,10 @@
   <div id="app">
     <header id="header">
       <h1>la-word</h1>
-      <button id="btn-add" aria-label="Pridať kartu">+</button>
+      <div class="header-actions">
+        <button id="btn-settings" aria-label="Nastavenia">⚙️</button>
+        <button id="btn-add" aria-label="Pridať kartu">+</button>
+      </div>
     </header>
     <main id="main">
       <div id="card-area">
@@ -70,6 +73,18 @@
           <button type="submit" id="btn-save">Pridať</button>
         </div>
       </form>
+    </div>
+  </div>
+
+  <div id="settings-overlay" class="hidden">
+    <div id="settings-modal">
+      <h2 id="settings-title">Nastavenia</h2>
+      <div class="settings-actions">
+        <button id="btn-export" class="settings-btn">📥 Exportovať karty</button>
+        <button id="btn-import" class="settings-btn">📤 Importovať karty</button>
+      </div>
+      <p class="settings-info">Export vytvorí .json súbor so všetkými kartami. Import nahradí existujúce karty.</p>
+      <button id="btn-settings-close" class="settings-close">Zavrieť</button>
     </div>
   </div>
 
