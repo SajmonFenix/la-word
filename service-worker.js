@@ -1,17 +1,18 @@
 const CACHE = 'la-word-v1';
+const BASE = '/la-word';
 
 self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(CACHE).then((cache) => {
       return cache.addAll([
-        '/',
-        '/index.html',
-        '/css/style.css',
-        '/js/storage.js',
-        '/js/cards.js',
-        '/js/ui.js',
-        '/js/app.js',
-        '/manifest.json'
+        BASE + '/',
+        BASE + '/index.html',
+        BASE + '/css/style.css',
+        BASE + '/js/storage.js',
+        BASE + '/js/cards.js',
+        BASE + '/js/ui.js',
+        BASE + '/js/app.js',
+        BASE + '/manifest.json'
       ]);
     })
   );
