@@ -137,7 +137,10 @@ const ui = {
     }, { passive: false });
 
     card.addEventListener('touchend', () => {
-      if (!isDragging) return;
+      if (!isDragging) {
+        this._wasDragged = false;
+        return;
+      }
       this._wasDragged = true;
       card.classList.remove('swiping');
       const match = card.style.transform.match(/translateX\((-?\d+)/);
