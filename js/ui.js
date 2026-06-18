@@ -69,6 +69,7 @@ const ui = {
     card.style.opacity = '1';
 
     this._updateCounter();
+    this._renderStack();
   },
 
   showNext() {
@@ -136,6 +137,7 @@ const ui = {
         card.classList.add('swiping');
         card.style.transform = `translateX(${dx}px) rotate(${dx * 0.05}deg)`;
         card.style.opacity = Math.max(0, 1 - Math.abs(dx) / 400);
+        this._animateStack(dx);
       }
     }, { passive: false });
 
@@ -151,6 +153,7 @@ const ui = {
       } else {
         card.style.transform = '';
         card.style.opacity = '1';
+        this._renderStack();
       }
       isDragging = false;
     }, { passive: true });
@@ -172,6 +175,7 @@ const ui = {
           card.classList.add('swiping');
           card.style.transform = `translateX(${dx}px) rotate(${dx * 0.05}deg)`;
           card.style.opacity = Math.max(0, 1 - Math.abs(dx) / 400);
+          this._animateStack(dx);
         }
       };
 
@@ -189,6 +193,7 @@ const ui = {
         } else {
           card.style.transform = '';
           card.style.opacity = '1';
+          this._renderStack();
         }
         isDragging = false;
       };
@@ -220,5 +225,44 @@ const ui = {
     } else {
       el.textContent = `${this._currentIndex + 1} / ${all.length}`;
     }
+  },
+
+  _renderStack() {
+    const container = document.getElementById('card-container');
+    container.querySelectorAll('.card-stack-item').forEach(el => el.remove());
+
+    const all = cards.getAll();
+    const count = all.length;
+    if (count < 2) return;
+
+    const stackCount = Math.min(3, count - 1);
+    for (let i = 1; i <= stackCount; i++) {
+      const idx = (this._currentIndex + i) % count;
+      const card = all[idx];
+      const el = document.createElement('div');
+      el.className = 'card-stack-item';
+      el.style.background = card.color;
+      el.style.top = `${-i * 8}px`;
+      el.style.left = `${-i * 5}px`;
+      el.style.transform = `rotate(${-i}deg)`;
+      el.style.filter = `brightness(${1 - i * 0.1})`;
+      el.style.zIndex = 3 - i;
+      container.appendChild(el);
+    }
+  },
+
+  _animateStack(dx) {
+    if (dx >= 0) return;
+    const container = document.getElementById('card-container');
+    const items = container.querySelectorAll('.card-stack-item');
+    if (items.length === 0) return;
+
+    const progress = Math.min(1, Math.abs(dx) / 100);
+    const first = items[0];
+    const rot = -1 * (1 - progress);
+    first.style.top = `${-8 * (1 - progress)}px`;
+    first.style.left = `${-5 * (1 - progress)}px`;
+    first.style.transform = `rotate(${rot}deg)`;
+    first.style.filter = `brightness(${0.9 + progress * 0.1})`;
   }
 };
