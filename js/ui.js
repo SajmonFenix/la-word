@@ -117,7 +117,10 @@ const ui = {
     let isDragging = false;
 
     card.addEventListener('touchstart', (e) => {
-      if (this._isFlipped) return;
+      if (this._isFlipped) {
+        this._isFlipped = false;
+        card.classList.remove('flipped');
+      }
       this._wasDragged = false;
       startX = e.touches[0].clientX;
       startY = e.touches[0].clientY;
@@ -125,7 +128,6 @@ const ui = {
     }, { passive: true });
 
     card.addEventListener('touchmove', (e) => {
-      if (this._isFlipped) return;
       const dx = e.touches[0].clientX - startX;
       const dy = e.touches[0].clientY - startY;
       if (Math.abs(dx) > 10 && Math.abs(dx) > Math.abs(dy)) {
@@ -154,7 +156,10 @@ const ui = {
     }, { passive: true });
 
     card.addEventListener('mousedown', (e) => {
-      if (this._isFlipped) return;
+      if (this._isFlipped) {
+        this._isFlipped = false;
+        card.classList.remove('flipped');
+      }
       startX = e.clientX;
       startY = e.clientY;
       isDragging = false;
