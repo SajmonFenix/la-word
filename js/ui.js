@@ -97,6 +97,7 @@ const ui = {
       grabCursor: true,
       centeredSlides: true,
       slidesPerView: 'auto',
+      loop: true,
       initialSlide: this._currentIndex,
       coverflowEffect: {
         rotate: 25,
@@ -112,7 +113,7 @@ const ui = {
       on: {
         slideChange: () => {
           if (this._swiper) {
-            this._currentIndex = this._swiper.activeIndex;
+            this._currentIndex = this._swiper.realIndex;
             this._updateCounter();
           }
         },
