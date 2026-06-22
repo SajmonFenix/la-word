@@ -2,3 +2,5 @@
 .superpowers/
 la-word-screenshot.png
 plans/
+backup/
+.DS_Store
