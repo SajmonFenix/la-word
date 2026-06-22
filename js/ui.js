@@ -1,11 +1,16 @@
+const STORAGE_KEY_SHOW_ARROWS = 'laword_show_arrows';
+
 const ui = {
   _currentIndex: 0,
   _swiper: null,
   _clickHandler: null,
   onEditCard: null,
+  _showArrows: true,
 
   init() {
     this._currentIndex = 0;
+    this._showArrows = localStorage.getItem(STORAGE_KEY_SHOW_ARROWS) !== 'false';
+    this._applyArrowsVisibility();
     this.render();
   },
 
@@ -167,5 +172,16 @@ const ui = {
     } else {
       el.textContent = `${this._currentIndex + 1} / ${all.length}`;
     }
+  },
+
+  toggleArrows(show) {
+    this._showArrows = show;
+    localStorage.setItem(STORAGE_KEY_SHOW_ARROWS, show);
+    this._applyArrowsVisibility();
+  },
+
+  _applyArrowsVisibility() {
+    document.getElementById('btn-prev').classList.toggle('hidden', !this._showArrows);
+    document.getElementById('btn-next').classList.toggle('hidden', !this._showArrows);
   },
 };

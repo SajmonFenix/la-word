@@ -31,6 +31,9 @@ function bindEvents() {
   document.addEventListener('cards-change', () => {
     ui.refresh();
   });
+  document.getElementById('toggle-arrows').addEventListener('change', (e) => {
+    ui.toggleArrows(e.target.checked);
+  });
 }
 
 function openAddModal(cardData) {
@@ -138,6 +141,7 @@ async function handleTranslate() {
 }
 
 function openSettings() {
+  document.getElementById('toggle-arrows').checked = ui._showArrows;
   document.getElementById('settings-overlay').classList.remove('hidden');
 }
 
