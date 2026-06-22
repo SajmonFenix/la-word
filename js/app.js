@@ -4,6 +4,46 @@ const COLORS = [
 ];
 
 let editingId = null;
+let _searchActive = false;
+
+function openSearch() {
+  _searchActive = true;
+  document.getElementById('header-actions').classList.add('hidden');
+  document.getElementById('search-bar').classList.remove('hidden');
+  document.getElementById('search-input').value = '';
+  document.getElementById('search-feedback').classList.add('hidden');
+  setTimeout(() => document.getElementById('search-input').focus(), 100);
+}
+
+function closeSearch() {
+  _searchActive = false;
+  document.getElementById('header-actions').classList.remove('hidden');
+  document.getElementById('search-bar').classList.add('hidden');
+  document.getElementById('search-feedback').classList.add('hidden');
+}
+
+function handleSearch() {
+  const query = document.getElementById('search-input').value;
+  const fb = document.getElementById('search-feedback');
+
+  if (!query.trim()) {
+    fb.textContent = 'Zadaj hľadaný výraz';
+    fb.classList.remove('hidden');
+    return;
+  }
+
+  const result = ui.search(query);
+
+  if (result === null) {
+    fb.textContent = 'Žiadna karta nevyhovuje hľadaniu';
+    fb.classList.remove('hidden');
+  } else {
+    fb.textContent = `Nájdená karta ${result + 1} / ${cards.getAll().length}`;
+    fb.classList.remove('hidden');
+    setTimeout(() => fb.classList.add('hidden'), 2000);
+    closeSearch();
+  }
+}
 
 async function init() {
   await cards.init();
@@ -33,6 +73,12 @@ function bindEvents() {
   });
   document.getElementById('toggle-arrows').addEventListener('change', (e) => {
     ui.toggleArrows(e.target.checked);
+  });
+  document.getElementById('btn-search').addEventListener('click', openSearch);
+  document.getElementById('btn-search-close').addEventListener('click', closeSearch);
+  document.getElementById('search-input').addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') handleSearch();
+    if (e.key === 'Escape') closeSearch();
   });
 }
 

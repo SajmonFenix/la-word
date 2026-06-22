@@ -185,4 +185,24 @@ const ui = {
     document.getElementById('btn-prev').classList.toggle('hidden', !this._showArrows);
     document.getElementById('btn-next').classList.toggle('hidden', !this._showArrows);
   },
+
+  search(query) {
+    const all = cards.getAll();
+    const q = query.toLowerCase().trim();
+    if (!q || all.length === 0) return null;
+
+    const idx = all.findIndex(c =>
+      c.front.toLowerCase().includes(q) ||
+      (c.hint && c.hint.toLowerCase().includes(q)) ||
+      c.back.toLowerCase().includes(q)
+    );
+
+    if (idx === -1) return null;
+
+    this._currentIndex = idx;
+    if (this._swiper) {
+      this._swiper.slideToLoop(idx, 300);
+    }
+    return idx;
+  },
 };

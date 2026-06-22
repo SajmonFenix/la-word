@@ -15,11 +15,17 @@
   <div id="app">
     <header id="header">
       <h1>la-word</h1>
-      <div class="header-actions">
+      <div class="header-actions" id="header-actions">
+        <button id="btn-search" aria-label="Hľadať">🔍</button>
         <button id="btn-settings" aria-label="Nastavenia">⚙️</button>
         <button id="btn-add" aria-label="Pridať kartu">+</button>
       </div>
+      <div id="search-bar" class="hidden">
+        <input type="text" id="search-input" placeholder="Hľadať kartu..." autocomplete="off">
+        <button id="btn-search-close" aria-label="Zatvoriť hľadanie">✕</button>
+      </div>
     </header>
+    <div id="search-feedback" class="hidden"></div>
     <main id="main">
       <div id="card-area">
         <button id="btn-prev" class="nav-arrow" aria-label="Predchádzajúca karta">‹</button>
