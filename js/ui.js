@@ -94,10 +94,10 @@ const ui = {
       slidesPerView: 'auto',
       initialSlide: this._currentIndex,
       coverflowEffect: {
-        rotate: 30,
+        rotate: 25,
         stretch: 0,
-        depth: 120,
-        modifier: 1,
+        depth: 200,
+        modifier: 1.5,
         slideShadows: false,
       },
       navigation: {

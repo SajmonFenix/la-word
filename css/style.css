@@ -116,9 +116,9 @@ html, body {
 }
 
 .swiper {
-  width: 260px;
-  height: 360px;
-  padding: 40px 0;
+  width: 320px;
+  height: 430px;
+  padding: 50px 0;
   margin: 0;
   overflow: visible;
 }
@@ -128,11 +128,12 @@ html, body {
 }
 
 .swiper-slide {
-  width: 240px;
-  height: 320px;
+  width: 280px;
+  height: 370px;
   display: flex;
   align-items: center;
   justify-content: center;
+  transition: transform 0.4s ease;
 }
 
 .swiper-slide .card {
@@ -149,7 +150,11 @@ html, body {
   transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
   transform-style: preserve-3d;
   border-radius: var(--radius);
-  box-shadow: var(--shadow);
+  box-shadow: 0 4px 15px rgba(0,0,0,0.15);
+}
+
+.swiper-slide-active .card-inner {
+  box-shadow: 0 8px 30px rgba(0,0,0,0.25);
 }
 
 .swiper-slide .card.flipped .card-inner {
@@ -174,12 +179,20 @@ html, body {
   transform: rotateY(180deg);
 }
 
+.swiper-slide-active .card-front-text {
+  font-size: 28px;
+}
+
 .swiper-slide .card-front-text {
-  font-size: 24px;
+  font-size: 22px;
   font-weight: 700;
   text-align: center;
   word-break: break-word;
   color: white;
+}
+
+.swiper-slide-active .hint {
+  font-size: 15px;
 }
 
 .swiper-slide .hint {
@@ -189,6 +202,10 @@ html, body {
   margin-top: 8px;
   text-align: center;
   opacity: 0.85;
+}
+
+.swiper-slide-active .card-back-text {
+  font-size: 24px;
 }
 
 .swiper-slide .card-back-text {
@@ -224,6 +241,12 @@ html, body {
 .swiper-slide .card-back-actions button:active {
   opacity: 1;
   background: rgba(0,0,0,0.25);
+}
+
+.swiper-slide-active .card-back-actions button {
+  width: 40px;
+  height: 40px;
+  font-size: 20px;
 }
 
 /* ── Nav arrows ── */
