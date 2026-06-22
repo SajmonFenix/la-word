@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="sk">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Momentum Card Slider — Prototyp</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: -apple-system, system-ui, sans-serif;
+    background: #1a1a2e;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    gap: 24px;
+    color: #ddd;
+    padding: 20px;
+    user-select: none;
+  }
+  h1 { font-size: 18px; opacity: 0.7; font-weight: 400; }
+
+  #viewport {
+    width: 300px;
+    height: 400px;
+    overflow: hidden;
+    border-radius: 16px;
+    position: relative;
+    background: #16213e;
+    touch-action: none;
+    cursor: grab;
+  }
+  #viewport:active { cursor: grabbing; }
+
+  #track {
+    display: flex;
+    height: 100%;
+    transition: none;
+    will-change: transform;
+  }
+
+  .card {
+    min-width: 300px;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    font-size: 32px;
+    font-weight: 700;
+    color: white;
+    padding: 30px;
+    position: relative;
+    flex-shrink: 0;
+  }
+  .card .index {
+    font-size: 14px;
+    opacity: 0.6;
+    margin-top: 8px;
+  }
+  .card .sub {
+    font-size: 18px;
+    font-weight: 400;
+    opacity: 0.8;
+    margin-top: 4px;
+  }
+
+  .controls {
+    display: flex;
+    gap: 20px;
+    align-items: center;
+  }
+  .controls button {
+    font-size: 28px;
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    border: 1px solid rgba(255,255,255,0.15);
+    background: rgba(255,255,255,0.05);
+    color: white;
+    cursor: pointer;
+    transition: background 0.15s;
+  }
+  .controls button:hover { background: rgba(255,255,255,0.12); }
+  .controls button:active { background: rgba(255,255,255,0.2); }
+
+  #counter {
+    font-size: 15px;
+    opacity: 0.6;
+    min-width: 60px;
+    text-align: center;
+  }
+
+  .legend {
+    font-size: 13px;
+    opacity: 0.45;
+    text-align: center;
+    max-width: 360px;
+    line-height: 1.5;
+  }
+</style>
+</head>
+<body>
+
+<h1>🌀 Momentum Card Slider</h1>
+
+<div id="viewport">
+  <div id="track"></div>
+</div>
+
+<div class="controls">
+  <button id="prevBtn">‹</button>
+  <span id="counter">1 / 10</span>
+  <button id="nextBtn">›</button>
+</div>
+
+<div class="legend">
+  Ťahaj prstom/myšou — rýchly ťah = momentum cez viac kariet<br>
+  Slabý ťah = len na ďalšiu kartu | Ťuknutie zastaví
+</div>
+
+<script>
+const COLORS = [
+  '#4A90D9', '#E74C3C', '#2ECC71', '#F39C12', '#9B59B6',
+  '#1ABC9C', '#E67E22', '#3498DB', '#E91E63', '#00BCD4',
+  '#8BC34A', '#FF5722', '#607D8B', '#FF9800', '#795548',
+  '#673AB7', '#009688', '#F44336', '#3F51B5', '#CDDC39'
+];
+const WORDS = [
+  'ahoj', 'svet', 'kniha', 'stôl', 'voda',
+  'more', 'hora', 'rieka', 'dom', 'strom',
+  'auto', 'vták', 'obloha', 'noc', 'deň',
+  'slon', 'mačka', 'pes', 'kvet', 'hviezda'
+];
+
+const PER_PAGE = 300; // card width = viewport width
+
+let items = WORDS.map((w, i) => ({
+  word: w,
+  hint: w.split('').reverse().join(''),
+  color: COLORS[i % COLORS.length]
+}));
+
+const track = document.getElementById('track');
+const counter = document.getElementById('counter');
+
+// Render
+track.innerHTML = items.map((item, i) => `
+  <div class="card" style="background:${item.color}">
+    <div>${item.word}</div>
+    <div class="sub">${item.hint}</div>
+    <div class="index">${i + 1} / ${items.length}</div>
+  </div>
+`).join('');
+
+// ── Momentum engine ──────────────────────────────────
+
+let currentIndex = 0;
+let offset = 0;           // px offset from snapped position
+let velocity = 0;
+let isDragging = false;
+let isAnimating = false;
+let lastX = 0;
+let lastTime = 0;
+let velocitySamples = [];
+
+const VMAX = 3000;        // max momentum px/s
+const FRICTION = 0.92;    // per-frame multiplier
+const V_THRESHOLD = 8;    // below this, snap
+const SNAP_DURATION = 200;
+
+let snapAnim = null;      // { start, from, to, startTime }
+
+function render() {
+  let x = -currentIndex * PER_PAGE + offset;
+  track.style.transform = `translateX(${x}px)`;
+  counter.textContent = `${currentIndex + 1} / ${items.length}`;
+}
+
+function snapTo(index, animate = true) {
+  index = Math.max(0, Math.min(items.length - 1, index));
+  velocity = 0;
+  isAnimating = false;
+
+  if (index === currentIndex && Math.abs(offset) < 1) {
+    currentIndex = index;
+    offset = 0;
+    render();
+    return;
+  }
+
+  if (!animate) {
+    currentIndex = index;
+    offset = 0;
+    render();
+    return;
+  }
+
+  snapAnim = {
+    start: performance.now(),
+    from: offset,
+    to: 0,
+    fromIndex: currentIndex,
+    toIndex: index
+  };
+  currentIndex = index;
+
+  function tick(now) {
+    let t = (now - snapAnim.start) / SNAP_DURATION;
+    if (t >= 1) {
+      offset = 0;
+      render();
+      snapAnim = null;
+      return;
+    }
+    // ease-out cubic
+    let ease = 1 - Math.pow(1 - t, 3);
+    offset = snapAnim.from + (snapAnim.to - snapAnim.from) * ease;
+    render();
+    requestAnimationFrame(tick);
+  }
+  requestAnimationFrame(tick);
+}
+
+function applyMomentum() {
+  if (isDragging) return;
+  if (snapAnim) return;
+
+  if (Math.abs(velocity) < V_THRESHOLD && Math.abs(offset) < 2) {
+    // Snap to nearest
+    let nearest = Math.round(offset / PER_PAGE);
+    snapTo(currentIndex + nearest);
+    return;
+  }
+
+  isAnimating = true;
+  offset += velocity * (1 / 60);
+  velocity *= FRICTION;
+
+  // Clamp to bounds with bounce
+  let totalWidth = items.length * PER_PAGE;
+  let maxOffset = (items.length - 1) * PER_PAGE;
+  let currentPos = currentIndex * PER_PAGE - offset;
+
+  if (currentPos < 0) {
+    velocity *= -0.3;
+    offset = -currentIndex * PER_PAGE;
+  } else if (currentPos > (items.length - 1) * PER_PAGE) {
+    velocity *= -0.3;
+    offset = (items.length - 1 - currentIndex) * PER_PAGE;
+  }
+
+  // Accumulate offset into index
+  while (Math.abs(offset) >= PER_PAGE * 0.5) {
+    if (offset > 0 && currentIndex > 0) {
+      offset -= PER_PAGE;
+      currentIndex--;
+    } else if (offset < 0 && currentIndex < items.length - 1) {
+      offset += PER_PAGE;
+      currentIndex++;
+    } else {
+      break;
+    }
+  }
+
+  // Clamp
+  if (currentIndex <= 0 && offset > 0) offset *= 0.5;
+  if (currentIndex >= items.length - 1 && offset < 0) offset *= 0.5;
+
+  render();
+
+  if (Math.abs(velocity) > V_THRESHOLD || Math.abs(offset) > 2) {
+    requestAnimationFrame(applyMomentum);
+  } else {
+    isAnimating = false;
+    offset = 0;
+    render();
+  }
+}
+
+// ── Drag handlers ────────────────────────────────────
+
+function startDrag(x) {
+  isDragging = true;
+  lastX = x;
+  lastTime = performance.now();
+  velocitySamples = [];
+  if (snapAnim) snapAnim = null;
+  velocity = 0;
+}
+
+function moveDrag(x) {
+  if (!isDragging) return;
+  let dx = x - lastX;
+  let now = performance.now();
+  let dt = now - lastTime;
+
+  if (dt > 0) {
+    let v = dx / dt * 1000;
+    velocitySamples.push(v);
+    if (velocitySamples.length > 5) velocitySamples.shift();
+  }
+
+  offset += dx;
+  lastX = x;
+  lastTime = now;
+  render();
+}
+
+function endDrag() {
+  if (!isDragging) return;
+  isDragging = false;
+
+  // Compute average velocity from last samples
+  if (velocitySamples.length > 0) {
+    velocity = velocitySamples.reduce((a, b) => a + b, 0) / velocitySamples.length;
+    // Clamp
+    velocity = Math.max(-VMAX, Math.min(VMAX, velocity));
+  } else {
+    velocity = 0;
+  }
+
+  applyMomentum();
+}
+
+// ── Mouse ────────────────────────────────────────────
+
+const vp = document.getElementById('viewport');
+
+vp.addEventListener('mousedown', e => {
+  startDrag(e.clientX);
+  e.preventDefault();
+});
+
+window.addEventListener('mousemove', e => {
+  if (!isDragging) return;
+  moveDrag(e.clientX);
+});
+
+window.addEventListener('mouseup', () => {
+  if (isDragging) endDrag();
+});
+
+// ── Touch ────────────────────────────────────────────
+
+vp.addEventListener('touchstart', e => {
+  startDrag(e.touches[0].clientX);
+}, { passive: true });
+
+vp.addEventListener('touchmove', e => {
+  if (!isDragging) return;
+  moveDrag(e.touches[0].clientX);
+}, { passive: true });
+
+vp.addEventListener('touchend', () => {
+  if (isDragging) endDrag();
+});
+
+// ── Buttons ──────────────────────────────────────────
+
+document.getElementById('prevBtn').addEventListener('click', () => {
+  snapTo(currentIndex - 1);
+});
+document.getElementById('nextBtn').addEventListener('click', () => {
+  snapTo(currentIndex + 1);
+});
+
+// ── Init ─────────────────────────────────────────────
+render();
+
+// ── Click/tap to stop momentum ───────────────────────
+vp.addEventListener('click', () => {
+  if (isAnimating) {
+    velocity = 0;
+  }
+});
+</script>
+</body>
+</html>
