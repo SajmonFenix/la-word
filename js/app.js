@@ -7,6 +7,7 @@ let editingId = null;
 
 async function init() {
   await cards.init();
+  ui.onEditCard = (cardData) => openAddModal(cardData);
   ui.init();
   bindEvents();
 }
@@ -176,29 +177,4 @@ async function handleImport() {
   input.click();
 }
 
-function injectEditButton() {
-  const observer = new MutationObserver(() => {
-    const cardBack = document.querySelector('.card-back');
-    if (cardBack && !cardBack.querySelector('.card-back-actions')) {
-      const actions = document.createElement('div');
-      actions.className = 'card-back-actions';
-      actions.innerHTML = `<button id="btn-edit" title="Upraviť">✏️</button>`;
-      cardBack.appendChild(actions);
-
-      document.getElementById('btn-edit').addEventListener('click', (e) => {
-        e.stopPropagation();
-        const all = cards.getAll();
-        const current = all[ui._currentIndex];
-        if (current) {
-          document.getElementById('card').classList.remove('flipped');
-          ui._isFlipped = false;
-          openAddModal(current);
-        }
-      });
-    }
-  });
-  observer.observe(document.getElementById('card'), { childList: true, subtree: true });
-}
-
-document.addEventListener('DOMContentLoaded', injectEditButton);
 document.addEventListener('DOMContentLoaded', init);

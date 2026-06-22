@@ -1,21 +1,12 @@
 const ui = {
   _currentIndex: 0,
-  _isFlipped: false,
-  _isAnimating: false,
-  _wasDragged: false,
-  _arrowsBound: false,
+  _swiper: null,
+  _clickHandler: null,
+  onEditCard: null,
 
   init() {
     this._currentIndex = 0;
-    this._isFlipped = false;
     this.render();
-    this._bindCardEvents();
-    this._bindSwipe();
-    if (!this._arrowsBound) {
-      this._bindArrows();
-      this._arrowsBound = true;
-    }
-    this._updateCounter();
   },
 
   refresh() {
@@ -25,9 +16,7 @@ const ui = {
     } else if (this._currentIndex >= all.length) {
       this._currentIndex = all.length - 1;
     }
-    this._isFlipped = false;
     this.render();
-    this._updateCounter();
   },
 
   render() {
@@ -35,177 +24,120 @@ const ui = {
     const container = document.getElementById('card-container');
     const emptyState = document.getElementById('empty-state');
     const cardArea = document.getElementById('card-area');
-    const card = document.getElementById('card');
 
     if (all.length === 0) {
+      container.innerHTML = '<div class="swiper-wrapper"></div>';
       container.classList.add('hidden');
       emptyState.classList.remove('hidden');
-      if (cardArea) cardArea.classList.add('hidden');
+      cardArea.classList.add('hidden');
+      this._updateCounter();
       return;
     }
 
     container.classList.remove('hidden');
     emptyState.classList.add('hidden');
-    if (cardArea) cardArea.classList.remove('hidden');
+    cardArea.classList.remove('hidden');
 
     if (this._currentIndex >= all.length) {
       this._currentIndex = Math.max(0, all.length - 1);
     }
 
-    const current = all[this._currentIndex];
-    document.getElementById('card-front-text').textContent = current.front;
-    document.getElementById('card-hint').textContent = current.hint || '';
-    document.getElementById('card-hint').style.display = current.hint ? '' : 'none';
-    document.getElementById('card-back-text').textContent = current.back;
-
-    const front = card.querySelector('.card-front');
-    const back = card.querySelector('.card-back');
-    front.style.background = current.color;
-    back.style.background = current.color;
-
-    this._isFlipped = false;
-    card.classList.remove('flipped');
-    card.style.transform = '';
-    card.style.opacity = '1';
-
-    this._updateCounter();
-    this._renderStack();
-  },
-
-  showNext() {
-    if (this._isAnimating) return;
-    const all = cards.getAll();
-    if (all.length === 0) return;
-    if (this._currentIndex >= all.length - 1) {
-      this._currentIndex = 0;
-    } else {
-      this._currentIndex++;
+    if (this._swiper) {
+      this._swiper.destroy(true, true);
+      this._swiper = null;
     }
-    this._isFlipped = false;
-    this.render();
-  },
 
-  showPrev() {
-    if (this._isAnimating) return;
-    const all = cards.getAll();
-    if (all.length === 0) return;
-    if (this._currentIndex <= 0) {
-      this._currentIndex = all.length - 1;
-    } else {
-      this._currentIndex--;
+    if (this._clickHandler) {
+      container.removeEventListener('click', this._clickHandler);
     }
-    this._isFlipped = false;
-    this.render();
-  },
 
-  _bindCardEvents() {
-    const card = document.getElementById('card');
-    card.addEventListener('click', (e) => {
-      if (this._isAnimating) return;
-      if (this._wasDragged) {
-        this._wasDragged = false;
+    const wrapper = document.createElement('div');
+    wrapper.className = 'swiper-wrapper';
+
+    all.forEach((card, i) => {
+      const slide = document.createElement('div');
+      slide.className = 'swiper-slide';
+
+      slide.innerHTML = `
+        <div class="card">
+          <div class="card-inner">
+            <div class="card-front" style="background:${card.color}">
+              <span class="card-front-text"></span>
+              <span class="hint"></span>
+            </div>
+            <div class="card-back" style="background:${card.color}">
+              <span class="card-back-text"></span>
+              <div class="card-back-actions">
+                <button class="btn-edit" title="Upraviť">✏️</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+
+      slide.querySelector('.card-front-text').textContent = card.front;
+      const hintEl = slide.querySelector('.hint');
+      hintEl.textContent = card.hint || '';
+      hintEl.style.display = card.hint ? '' : 'none';
+      slide.querySelector('.card-back-text').textContent = card.back;
+
+      wrapper.appendChild(slide);
+    });
+
+    container.innerHTML = '';
+    container.appendChild(wrapper);
+
+    this._swiper = new Swiper(container, {
+      effect: 'coverflow',
+      grabCursor: true,
+      centeredSlides: true,
+      slidesPerView: 'auto',
+      initialSlide: this._currentIndex,
+      coverflowEffect: {
+        rotate: 30,
+        stretch: 0,
+        depth: 120,
+        modifier: 1,
+        slideShadows: false,
+      },
+      navigation: {
+        prevEl: '#btn-prev',
+        nextEl: '#btn-next',
+      },
+      on: {
+        slideChange: () => {
+          if (this._swiper) {
+            this._currentIndex = this._swiper.activeIndex;
+            this._updateCounter();
+          }
+        },
+      },
+    });
+
+    this._clickHandler = (e) => {
+      const btn = e.target.closest('.btn-edit');
+      if (btn) {
+        e.stopPropagation();
+        const slide = btn.closest('.swiper-slide');
+        const idx = Array.from(wrapper.children).indexOf(slide);
+        if (this.onEditCard) {
+          this.onEditCard(all[idx]);
+        }
         return;
       }
-      this._isFlipped = !this._isFlipped;
-      card.classList.toggle('flipped');
-    });
-  },
 
-  _bindSwipe() {
-    const card = document.getElementById('card');
-    let startX = 0;
-    let startY = 0;
-    let isDragging = false;
-
-    card.addEventListener('touchstart', (e) => {
-      if (this._isFlipped) {
-        this._isFlipped = false;
-        card.classList.remove('flipped');
-      }
-      this._wasDragged = false;
-      startX = e.touches[0].clientX;
-      startY = e.touches[0].clientY;
-      isDragging = false;
-    }, { passive: true });
-
-    card.addEventListener('touchmove', (e) => {
-      const dx = e.touches[0].clientX - startX;
-      const dy = e.touches[0].clientY - startY;
-      if (Math.abs(dx) > 10 && Math.abs(dx) > Math.abs(dy)) {
-        isDragging = true;
-        e.preventDefault();
-        card.classList.add('swiping');
-        card.style.transform = `translateX(${dx}px) rotate(${dx * 0.05}deg)`;
-        card.style.opacity = Math.max(0, 1 - Math.abs(dx) / 400);
-        this._animateStack(dx);
-      }
-    }, { passive: false });
-
-    card.addEventListener('touchend', () => {
-      if (!isDragging) return;
-      this._wasDragged = true;
-      card.classList.remove('swiping');
-      const match = card.style.transform.match(/translateX\((-?\d+)/);
-      const dx = match ? parseInt(match[1]) : 0;
-      if (Math.abs(dx) > 100) {
-        if (dx < 0) this.showNext();
-        else this.showPrev();
-      } else {
-        card.style.transform = '';
-        card.style.opacity = '1';
-        this._renderStack();
-      }
-      isDragging = false;
-    }, { passive: true });
-
-    card.addEventListener('mousedown', (e) => {
-      if (this._isFlipped) {
-        this._isFlipped = false;
-        card.classList.remove('flipped');
-      }
-      startX = e.clientX;
-      startY = e.clientY;
-      isDragging = false;
-
-      const onMove = (e) => {
-        const dx = e.clientX - startX;
-        const dy = e.clientY - startY;
-        if (Math.abs(dx) > 10 && Math.abs(dx) > Math.abs(dy)) {
-          isDragging = true;
-          card.classList.add('swiping');
-          card.style.transform = `translateX(${dx}px) rotate(${dx * 0.05}deg)`;
-          card.style.opacity = Math.max(0, 1 - Math.abs(dx) / 400);
-          this._animateStack(dx);
+      const cardEl = e.target.closest('.swiper-slide .card');
+      if (cardEl) {
+        const slide = cardEl.closest('.swiper-slide');
+        if (slide && slide.classList.contains('swiper-slide-active')) {
+          cardEl.classList.toggle('flipped');
         }
-      };
+      }
+    };
 
-      const onUp = () => {
-        document.removeEventListener('mousemove', onMove);
-        document.removeEventListener('mouseup', onUp);
-        if (!isDragging) return;
-        this._wasDragged = true;
-        card.classList.remove('swiping');
-        const match = card.style.transform.match(/translateX\((-?\d+)/);
-        const dx = match ? parseInt(match[1]) : 0;
-        if (Math.abs(dx) > 100) {
-          if (dx < 0) this.showNext();
-          else this.showPrev();
-        } else {
-          card.style.transform = '';
-          card.style.opacity = '1';
-          this._renderStack();
-        }
-        isDragging = false;
-      };
+    container.addEventListener('click', this._clickHandler);
 
-      document.addEventListener('mousemove', onMove);
-      document.addEventListener('mouseup', onUp);
-    });
-  },
-
-  _bindArrows() {
-    document.getElementById('btn-prev').addEventListener('click', () => this.showPrev());
-    document.getElementById('btn-next').addEventListener('click', () => this.showNext());
+    this._updateCounter();
   },
 
   showCard(id) {
@@ -213,8 +145,18 @@ const ui = {
     const idx = all.findIndex(c => c.id === id);
     if (idx !== -1) {
       this._currentIndex = idx;
-      this.render();
+      if (this._swiper) {
+        this._swiper.slideTo(idx);
+      }
     }
+  },
+
+  showNext() {
+    if (this._swiper) this._swiper.slideNext();
+  },
+
+  showPrev() {
+    if (this._swiper) this._swiper.slidePrev();
   },
 
   _updateCounter() {
@@ -226,43 +168,4 @@ const ui = {
       el.textContent = `${this._currentIndex + 1} / ${all.length}`;
     }
   },
-
-  _renderStack() {
-    const container = document.getElementById('card-container');
-    container.querySelectorAll('.card-stack-item').forEach(el => el.remove());
-
-    const all = cards.getAll();
-    const count = all.length;
-    if (count < 2) return;
-
-    const stackCount = Math.min(3, count - 1);
-    for (let i = 1; i <= stackCount; i++) {
-      const idx = (this._currentIndex + i) % count;
-      const card = all[idx];
-      const el = document.createElement('div');
-      el.className = 'card-stack-item';
-      el.style.background = card.color;
-      el.style.top = `${-i * 8}px`;
-      el.style.left = `${-i * 5}px`;
-      el.style.transform = `rotate(${-i}deg)`;
-      el.style.filter = `brightness(${1 - i * 0.1})`;
-      el.style.zIndex = 3 - i;
-      container.appendChild(el);
-    }
-  },
-
-  _animateStack(dx) {
-    if (dx >= 0) return;
-    const container = document.getElementById('card-container');
-    const items = container.querySelectorAll('.card-stack-item');
-    if (items.length === 0) return;
-
-    const progress = Math.min(1, Math.abs(dx) / 100);
-    const first = items[0];
-    const rot = -1 * (1 - progress);
-    first.style.top = `${-8 * (1 - progress)}px`;
-    first.style.left = `${-5 * (1 - progress)}px`;
-    first.style.transform = `rotate(${rot}deg)`;
-    first.style.filter = `brightness(${0.9 + progress * 0.1})`;
-  }
 };

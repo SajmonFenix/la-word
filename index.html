@@ -8,6 +8,7 @@
   <title>la-word</title>
   <link rel="manifest" href="manifest.json">
   <link rel="apple-touch-icon" href="icons/icon-192.png">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css">
   <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
@@ -22,18 +23,8 @@
     <main id="main">
       <div id="card-area">
         <button id="btn-prev" class="nav-arrow" aria-label="Predchádzajúca karta">‹</button>
-        <div id="card-container">
-          <div id="card" class="card">
-            <div class="card-inner">
-              <div class="card-front">
-                <span id="card-front-text"></span>
-                <span id="card-hint" class="hint"></span>
-              </div>
-              <div class="card-back">
-                <span id="card-back-text"></span>
-              </div>
-            </div>
-          </div>
+        <div id="card-container" class="swiper">
+          <div class="swiper-wrapper"></div>
         </div>
         <button id="btn-next" class="nav-arrow" aria-label="Ďalšia karta">›</button>
       </div>
@@ -89,6 +80,7 @@
     </div>
   </div>
 
+  <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
   <script src="js/storage.js"></script>
   <script src="js/cards.js"></script>
   <script src="js/ui.js"></script>
