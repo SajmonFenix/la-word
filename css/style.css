@@ -180,11 +180,11 @@ html, body {
 }
 
 .swiper-slide-active .card-front-text {
-  font-size: 28px;
+  font-size: 64px;
 }
 
 .swiper-slide .card-front-text {
-  font-size: 22px;
+  font-size: 36px;
   font-weight: 700;
   text-align: center;
   word-break: break-word;
@@ -192,7 +192,7 @@ html, body {
 }
 
 .swiper-slide-active .hint {
-  font-size: 15px;
+  font-size: 16px;
 }
 
 .swiper-slide .hint {
@@ -205,11 +205,11 @@ html, body {
 }
 
 .swiper-slide-active .card-back-text {
-  font-size: 24px;
+  font-size: 40px;
 }
 
 .swiper-slide .card-back-text {
-  font-size: 20px;
+  font-size: 28px;
   text-align: center;
   word-break: break-word;
   color: white;
