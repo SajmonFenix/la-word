@@ -45,7 +45,7 @@ function openAddModal(cardData) {
   document.getElementById('input-front').value = cardData?.front || '';
   document.getElementById('input-hint').value = cardData?.hint || '';
   document.getElementById('input-back').value = cardData?.back || '';
-  renderColorPicker(cardData?.color || COLORS[0]);
+  renderColorPicker(cardData?.color || COLORS[Math.floor(Math.random() * COLORS.length)]);
   document.getElementById('modal-overlay').classList.remove('hidden');
   document.getElementById('input-front').focus();
 }
