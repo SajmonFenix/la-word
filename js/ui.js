@@ -97,15 +97,15 @@ const ui = {
       grabCursor: true,
       centeredSlides: true,
       slidesPerView: 'auto',
-      spaceBetween: 8,
+      spaceBetween: -30,
       loop: true,
       loopedSlides: 1,
       initialSlide: this._currentIndex,
       coverflowEffect: {
         rotate: 0,
         stretch: 0,
-        depth: 15,
-        modifier: 0.5,
+        depth: 100,
+        modifier: 1.5,
         slideShadows: false,
       },
       navigation: {

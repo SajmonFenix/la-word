@@ -194,8 +194,7 @@ html, body {
 }
 
 .swiper {
-  width: 90vw;
-  max-width: 800px;
+  width: 100vw;
   height: clamp(300px, 50vh, 420px);
   padding: clamp(16px, 3vh, 40px) 0;
   overflow: hidden;
@@ -206,7 +205,7 @@ html, body {
 }
 
 .swiper-slide {
-  width: clamp(100px, 28vw, 260px);
+  width: min(82vw, 420px);
   display: flex;
   align-items: center;
   justify-content: center;
