@@ -228,7 +228,7 @@ html, body {
 .splide {
    width: 100vw;
    height: clamp(300px, 50vh, 420px);
-   padding: clamp(40px, 8vh, 80px) 0 clamp(20px, 4vh, 50px) 0;
+   padding: clamp(20px, 4vh, 40px) 0 clamp(20px, 4vh, 40px) 0;
    overflow: hidden;
 }
 
