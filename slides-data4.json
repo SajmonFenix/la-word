@@ -1,0 +1,36 @@
+{
+  "containerWidth": 350,
+  "slidesInViewport": 5,
+  "slides": [
+    {
+      "index": 1,
+      "width": 112,
+      "left": -85,
+      "right": 27
+    },
+    {
+      "index": 2,
+      "width": 114,
+      "left": 24,
+      "right": 138
+    },
+    {
+      "index": 3,
+      "width": 117,
+      "left": 137,
+      "right": 253
+    },
+    {
+      "index": 4,
+      "width": 114,
+      "left": 252,
+      "right": 366
+    },
+    {
+      "index": 5,
+      "width": 112,
+      "left": 363,
+      "right": 475
+    }
+  ]
+}

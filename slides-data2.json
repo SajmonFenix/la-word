@@ -1,0 +1,48 @@
+{
+  "containerWidth": 351,
+  "slidesCount": 7,
+  "slides": [
+    {
+      "index": 0,
+      "width": 102,
+      "left": -161,
+      "scale": "translate3d(0px, 0px, -180px) "
+    },
+    {
+      "index": 1,
+      "width": 106,
+      "left": -71,
+      "scale": "translate3d(0px, 0px, -120px) "
+    },
+    {
+      "index": 2,
+      "width": 111,
+      "left": 28,
+      "scale": "translate3d(0px, 0px, -60px) r"
+    },
+    {
+      "index": 3,
+      "width": 117,
+      "left": 137,
+      "scale": "translate3d(0px, 0px, 0px) rot"
+    },
+    {
+      "index": 4,
+      "width": 111,
+      "left": 251,
+      "scale": "translate3d(0px, 0px, -60px) r"
+    },
+    {
+      "index": 5,
+      "width": 106,
+      "left": 355,
+      "scale": "translate3d(0px, 0px, -120px) "
+    },
+    {
+      "index": 6,
+      "width": 102,
+      "left": 449,
+      "scale": "translate3d(0px, 0px, -180px) "
+    }
+  ]
+}

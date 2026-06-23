@@ -1,5 +1,6 @@
 const STORAGE_KEY = 'laword_cards';
 const BACKUP_KEY = 'laword_cards_backup';
+const FONT_SIZE_KEY = 'laword_fontSize';
 const DB_NAME = 'laword';
 const STORE_NAME = 'cards';
 const DB_VERSION = 1;
@@ -94,10 +95,30 @@ const storage = {
     }
   },
 
-  async importData(jsonString) {
-    const cards = JSON.parse(jsonString);
-    if (!Array.isArray(cards)) throw new Error('Invalid format');
-    await this.save(cards);
-    return cards;
-  }
+   async importData(jsonString) {
+     const cards = JSON.parse(jsonString);
+     if (!Array.isArray(cards)) throw new Error('Invalid format');
+     await this.save(cards);
+     return cards;
+   },
+
+   // Font size management
+   saveFontSizes(front, back) {
+     try {
+       const fontSizes = { front, back };
+       localStorage.setItem(FONT_SIZE_KEY, JSON.stringify(fontSizes));
+     } catch (e) {
+       console.error('Font size save failed:', e);
+     }
+   },
+
+   loadFontSizes() {
+     try {
+       const data = localStorage.getItem(FONT_SIZE_KEY);
+       if (data) return JSON.parse(data);
+       return { front: 100, back: 100 };
+     } catch {
+       return { front: 100, back: 100 };
+     }
+   }
 };

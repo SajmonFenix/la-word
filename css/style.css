@@ -301,16 +301,16 @@ html, body {
 }
 
 .splide__slide .card-front-text {
-  font-size: clamp(16px, 4.5vw, 32px);
-  font-weight: 700;
-  text-align: center;
-  word-break: break-word;
-  color: white;
-  max-width: 100%;
+   font-size: calc(clamp(16px, 4.5vw, 32px) * var(--font-scale-front, 1));
+   font-weight: 700;
+   text-align: center;
+   word-break: break-word;
+   color: white;
+   max-width: 100%;
 }
 
 .splide__slide.is-active .card-front-text {
-  font-size: clamp(26px, 8vw, 58px);
+   font-size: calc(clamp(26px, 8vw, 58px) * var(--font-scale-front, 1));
 }
 
 .splide__slide .hint {
@@ -329,15 +329,15 @@ html, body {
 }
 
 .splide__slide .card-back-text {
-  font-size: clamp(14px, 3.5vw, 24px);
-  text-align: center;
-  word-break: break-word;
-  color: white;
-  max-width: 100%;
+   font-size: calc(clamp(14px, 3.5vw, 24px) * var(--font-scale-back, 1));
+   text-align: center;
+   word-break: break-word;
+   color: white;
+   max-width: 100%;
 }
 
 .splide__slide.is-active .card-back-text {
-  font-size: clamp(18px, 5.5vw, 36px);
+   font-size: calc(clamp(18px, 5.5vw, 36px) * var(--font-scale-back, 1));
 }
 
 .splide__slide .card-back-actions {
@@ -692,9 +692,92 @@ html, body {
 }
 
 .settings-close:active {
-  opacity: 0.7;
+   opacity: 0.7;
+}
+
+/* ── Font Size Settings ── */
+
+.settings-section {
+   margin-bottom: 24px;
+   padding-bottom: 16px;
+   border-bottom: 1px solid #e0e0e0;
+}
+
+.settings-section-title {
+   font-size: 14px;
+   font-weight: 600;
+   color: var(--text-secondary);
+   margin-bottom: 14px;
+   text-transform: uppercase;
+   letter-spacing: 0.05em;
+}
+
+.font-size-control {
+   margin-bottom: 20px;
+}
+
+.font-size-control > label {
+   display: block;
+   font-size: 14px;
+   font-weight: 500;
+   color: var(--text);
+   margin-bottom: 8px;
+}
+
+.font-size-adjuster {
+   display: flex;
+   align-items: center;
+   gap: 12px;
+   margin-bottom: 10px;
+}
+
+.font-size-btn {
+   width: 40px;
+   height: 40px;
+   border: 2px solid #e0e0e0;
+   border-radius: 8px;
+   background: white;
+   font-size: 20px;
+   font-weight: 600;
+   color: var(--primary);
+   cursor: pointer;
+   display: flex;
+   align-items: center;
+   justify-content: center;
+   transition: border-color 0.2s, background 0.2s;
+}
+
+.font-size-btn:active {
+   border-color: var(--primary);
+   background: #f5f5f5;
+}
+
+.font-size-value {
+   min-width: 60px;
+   text-align: center;
+   font-size: 16px;
+   font-weight: 600;
+   color: var(--text);
+}
+
+.font-preview {
+   padding: 12px;
+   background: #f9f9f9;
+   border-radius: 8px;
+   text-align: center;
+   color: var(--text);
+   font-weight: 500;
+   word-break: break-word;
+}
+
+#front-preview {
+   font-size: calc(clamp(26px, 8vw, 58px) * var(--font-scale-front, 1));
+}
+
+#back-preview {
+   font-size: calc(clamp(18px, 5.5vw, 36px) * var(--font-scale-back, 1));
 }
 
 .hidden {
-  display: none !important;
+   display: none !important;
 }

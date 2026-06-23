@@ -1,0 +1,47 @@
+{
+  "containerWidth": 351,
+  "slides": [
+    {
+      "index": 0,
+      "width": 59,
+      "left": -68,
+      "text": "asdfqwrgqwg\n        "
+    },
+    {
+      "index": 1,
+      "width": 67,
+      "left": -39,
+      "text": "qrgqrerger\n         "
+    },
+    {
+      "index": 2,
+      "width": 78,
+      "left": 0,
+      "text": "gqereqeerge\n        "
+    },
+    {
+      "index": 3,
+      "width": 94,
+      "left": 55,
+      "text": "asdfasdf\n           "
+    },
+    {
+      "index": 4,
+      "width": 117,
+      "left": 137,
+      "text": "sdfasdas\n           "
+    },
+    {
+      "index": 5,
+      "width": 94,
+      "left": 242,
+      "text": "asdfasdf\n           "
+    },
+    {
+      "index": 6,
+      "width": 78,
+      "left": 312,
+      "text": "asdfasdfasdf\n       "
+    }
+  ]
+}

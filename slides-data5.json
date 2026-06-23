@@ -1,0 +1,50 @@
+{
+  "containerWidth": 350,
+  "containerLeft": 20,
+  "containerRight": 370,
+  "slidesCount": 7,
+  "slides": [
+    {
+      "index": 0,
+      "width": 107,
+      "left": -203,
+      "right": -96
+    },
+    {
+      "index": 1,
+      "width": 108,
+      "left": -90,
+      "right": 18
+    },
+    {
+      "index": 2,
+      "width": 108,
+      "left": 24,
+      "right": 133
+    },
+    {
+      "index": 3,
+      "width": 109,
+      "left": 140,
+      "right": 250
+    },
+    {
+      "index": 4,
+      "width": 108,
+      "left": 257,
+      "right": 366
+    },
+    {
+      "index": 5,
+      "width": 108,
+      "left": 372,
+      "right": 480
+    },
+    {
+      "index": 6,
+      "width": 107,
+      "left": 486,
+      "right": 593
+    }
+  ]
+}

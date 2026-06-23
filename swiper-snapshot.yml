@@ -1,0 +1,41 @@
+- generic [ref=e2]:
+  - banner [ref=e3]:
+    - heading "la-word" [level=1] [ref=e4]
+    - generic [ref=e5]:
+      - button "Hľadať" [ref=e6] [cursor=pointer]: 🔍
+      - button "Nastavenia" [ref=e7] [cursor=pointer]: ⚙️
+      - button "Pridať kartu" [ref=e8] [cursor=pointer]: +
+  - main [ref=e9]:
+    - generic [ref=e10]:
+      - button "Previous slide" [ref=e11] [cursor=pointer]: ‹
+      - generic [ref=e13]:
+        - group "6 / 7" [ref=e14]:
+          - generic [ref=e16] [cursor=pointer]:
+            - generic [ref=e18]: qrgqrerger
+            - generic [ref=e19]
+        - group "7 / 7" [ref=e23]:
+          - generic [ref=e25] [cursor=pointer]:
+            - generic [ref=e27]: gqereqeerge
+            - generic [ref=e28]
+        - group "1 / 7" [ref=e32]:
+          - generic [ref=e34] [cursor=pointer]:
+            - generic [ref=e36]: asdfasdf
+            - generic [ref=e37]
+        - group "2 / 7" [ref=e41]:
+          - generic [ref=e43] [cursor=pointer]:
+            - generic [ref=e45]: sdfasdas
+            - generic [ref=e46]
+        - group "3 / 7" [ref=e50]:
+          - generic [ref=e52] [cursor=pointer]:
+            - generic [ref=e54]: asdfasdf
+            - generic [ref=e55]
+        - group "4 / 7" [ref=e59]:
+          - generic [ref=e61] [cursor=pointer]:
+            - generic [ref=e63]: asdfasdfasdf
+            - generic [ref=e64]
+        - group "5 / 7" [ref=e68]:
+          - generic [ref=e70] [cursor=pointer]:
+            - generic [ref=e72]: asdfqwrgqwg
+            - generic [ref=e73]
+      - button "Next slide" [ref=e77] [cursor=pointer]: ›
+  - generic [ref=e78]: 1 / 7

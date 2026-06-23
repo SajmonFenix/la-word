@@ -91,6 +91,34 @@
           <span class="toggle-slider"></span>
         </label>
       </div>
+
+      <!-- Font Size Settings -->
+      <div class="settings-section">
+        <h3 class="settings-section-title">Veľkosť textu</h3>
+        
+        <!-- Front text size -->
+        <div class="font-size-control">
+          <label>Slovo (predná strana)</label>
+          <div class="font-size-adjuster">
+            <button type="button" class="font-size-btn" id="btn-front-minus">−</button>
+            <span class="font-size-value" id="front-size-value">100%</span>
+            <button type="button" class="font-size-btn" id="btn-front-plus">+</button>
+          </div>
+          <div class="font-preview" id="front-preview">asdfasdf</div>
+        </div>
+
+        <!-- Back text size -->
+        <div class="font-size-control">
+          <label>Preklad (zadná strana)</label>
+          <div class="font-size-adjuster">
+            <button type="button" class="font-size-btn" id="btn-back-minus">−</button>
+            <span class="font-size-value" id="back-size-value">100%</span>
+            <button type="button" class="font-size-btn" id="btn-back-plus">+</button>
+          </div>
+          <div class="font-preview" id="back-preview">translation</div>
+        </div>
+      </div>
+
       <div class="settings-actions">
         <button id="btn-export" class="settings-btn">📥 Exportovať karty</button>
         <button id="btn-import" class="settings-btn">📤 Importovať karty</button>

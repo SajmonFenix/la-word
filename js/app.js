@@ -1,11 +1,17 @@
 const COLORS = [
-  '#c09f80', '#d8b5a5', '#e6c2a8', '#f0d9b5', '#f5e3c4',
-  '#e0d5b9', '#c4b5a6', '#b8a5a5', '#a79c9c', '#938e8c',
-  '#b5c6d8', '#c2d4e6', '#d0e2f1', '#e1f0fa', '#f2f9ff'
+   '#c09f80', '#d8b5a5', '#e6c2a8', '#f0d9b5', '#f5e3c4',
+   '#e0d5b9', '#c4b5a6', '#b8a5a5', '#a79c9c', '#938e8c',
+   '#b5c6d8', '#c2d4e6', '#d0e2f1', '#e1f0fa', '#f2f9ff'
 ];
 
 let editingId = null;
 let _searchActive = false;
+let fontSizes = { front: 100, back: 100 };
+
+// Font size constraints
+const FONT_SIZE_MIN = 70;
+const FONT_SIZE_MAX = 150;
+const FONT_SIZE_STEP = 10;
 
 function openSearch() {
   _searchActive = true;
@@ -47,42 +53,49 @@ function handleSearch() {
 }
 
 async function init() {
-  await cards.init();
-  ui.onEditCard = (cardData) => openAddModal(cardData);
-  ui.init();
-  bindEvents();
+   await cards.init();
+   ui.onEditCard = (cardData) => openAddModal(cardData);
+   ui.init();
+   loadFontSizes();
+   bindEvents();
 }
 
 function bindEvents() {
-  document.getElementById('btn-add').addEventListener('click', openAddModal);
-  document.getElementById('btn-cancel').addEventListener('click', closeModal);
-  document.getElementById('modal-overlay').addEventListener('click', (e) => {
-    if (e.target === e.currentTarget) closeModal();
-  });
-  document.getElementById('card-form').addEventListener('submit', handleFormSubmit);
-  document.getElementById('btn-delete').addEventListener('click', handleDelete);
-  document.getElementById('btn-translate').addEventListener('click', handleTranslate);
-  document.getElementById('btn-settings').addEventListener('click', openSettings);
-  document.getElementById('btn-settings-close').addEventListener('click', closeSettings);
-  document.getElementById('btn-export').addEventListener('click', handleExport);
-  document.getElementById('btn-import').addEventListener('click', handleImport);
-  document.getElementById('settings-overlay').addEventListener('click', (e) => {
-    if (e.target === e.currentTarget) closeSettings();
-  });
-  document.addEventListener('cards-change', () => {
-    ui.refresh();
-  });
-  document.getElementById('toggle-arrows').addEventListener('change', (e) => {
-    ui.toggleArrows(e.target.checked);
-  });
-  document.getElementById('btn-search').addEventListener('click', openSearch);
-  document.getElementById('btn-search-close').addEventListener('click', closeSearch);
-  document.getElementById('search-input').addEventListener('keydown', (e) => {
-    if (e.key === 'Enter') handleSearch();
-    if (e.key === 'Escape') closeSearch();
-  });
-  document.getElementById('btn-prev').addEventListener('click', () => ui.showPrev());
-  document.getElementById('btn-next').addEventListener('click', () => ui.showNext());
+   document.getElementById('btn-add').addEventListener('click', openAddModal);
+   document.getElementById('btn-cancel').addEventListener('click', closeModal);
+   document.getElementById('modal-overlay').addEventListener('click', (e) => {
+     if (e.target === e.currentTarget) closeModal();
+   });
+   document.getElementById('card-form').addEventListener('submit', handleFormSubmit);
+   document.getElementById('btn-delete').addEventListener('click', handleDelete);
+   document.getElementById('btn-translate').addEventListener('click', handleTranslate);
+   document.getElementById('btn-settings').addEventListener('click', openSettings);
+   document.getElementById('btn-settings-close').addEventListener('click', closeSettings);
+   document.getElementById('btn-export').addEventListener('click', handleExport);
+   document.getElementById('btn-import').addEventListener('click', handleImport);
+   document.getElementById('settings-overlay').addEventListener('click', (e) => {
+     if (e.target === e.currentTarget) closeSettings();
+   });
+   document.addEventListener('cards-change', () => {
+     ui.refresh();
+   });
+   document.getElementById('toggle-arrows').addEventListener('change', (e) => {
+     ui.toggleArrows(e.target.checked);
+   });
+   document.getElementById('btn-search').addEventListener('click', openSearch);
+   document.getElementById('btn-search-close').addEventListener('click', closeSearch);
+   document.getElementById('search-input').addEventListener('keydown', (e) => {
+     if (e.key === 'Enter') handleSearch();
+     if (e.key === 'Escape') closeSearch();
+   });
+   document.getElementById('btn-prev').addEventListener('click', () => ui.showPrev());
+   document.getElementById('btn-next').addEventListener('click', () => ui.showNext());
+
+   // Font size controls
+   document.getElementById('btn-front-minus').addEventListener('click', () => adjustFontSize('front', -1));
+   document.getElementById('btn-front-plus').addEventListener('click', () => adjustFontSize('front', 1));
+   document.getElementById('btn-back-minus').addEventListener('click', () => adjustFontSize('back', -1));
+   document.getElementById('btn-back-plus').addEventListener('click', () => adjustFontSize('back', 1));
 }
 
 function openAddModal(cardData) {
@@ -228,6 +241,44 @@ async function handleImport() {
     }
   };
   input.click();
+}
+
+function adjustFontSize(type, direction) {
+   const newSize = fontSizes[type] + (direction * FONT_SIZE_STEP);
+   
+   // Constrain to min/max
+   fontSizes[type] = Math.max(FONT_SIZE_MIN, Math.min(FONT_SIZE_MAX, newSize));
+   
+   // Update UI
+   updateFontSizeUI();
+   
+   // Save to localStorage
+   storage.saveFontSizes(fontSizes.front, fontSizes.back);
+}
+
+function updateFontSizeUI() {
+   const frontValue = fontSizes.front;
+   const backValue = fontSizes.back;
+
+   // Update display values
+   document.getElementById('front-size-value').textContent = frontValue + '%';
+   document.getElementById('back-size-value').textContent = backValue + '%';
+
+   // Update preview scale
+   const frontScale = frontValue / 100;
+   const backScale = backValue / 100;
+
+   document.getElementById('front-preview').style.setProperty('--font-scale-front', frontScale);
+   document.getElementById('back-preview').style.setProperty('--font-scale-back', backScale);
+
+   // Apply to document root for cards
+   document.documentElement.style.setProperty('--font-scale-front', frontScale);
+   document.documentElement.style.setProperty('--font-scale-back', backScale);
+}
+
+function loadFontSizes() {
+   fontSizes = storage.loadFontSizes();
+   updateFontSizeUI();
 }
 
 document.addEventListener('DOMContentLoaded', init);

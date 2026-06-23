@@ -1,0 +1,41 @@
+{
+  "containerWidth": 254,
+  "slidesCount": 7,
+  "slides": [
+    {
+      "index": 0,
+      "width": 80,
+      "left": -84
+    },
+    {
+      "index": 1,
+      "width": 81,
+      "left": -8
+    },
+    {
+      "index": 2,
+      "width": 83,
+      "left": 71
+    },
+    {
+      "index": 3,
+      "width": 85,
+      "left": 153
+    },
+    {
+      "index": 4,
+      "width": 83,
+      "left": 236
+    },
+    {
+      "index": 5,
+      "width": 81,
+      "left": 317
+    },
+    {
+      "index": 6,
+      "width": 80,
+      "left": 394
+    }
+  ]
+}
