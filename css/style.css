@@ -7,7 +7,7 @@
 :root {
   --primary: #4A90D9;
   --bg: #1a1a2e;
-  --card-bg: #ffffff;
+  --card-bg: #faf4e9;   /* pastel matte card background */
   --text: #333333;
   --text-secondary: #888888;
   --radius: 16px;
@@ -52,7 +52,7 @@ html, body {
   width: 56px;
   height: 56px;
   border: none;
-  background: #FF9800;
+  background: var(--primary);
   color: white;
   border-radius: 50%;
   cursor: pointer;
@@ -277,6 +277,7 @@ html, body {
   height: 100%;
   border-radius: var(--radius);
   box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+  background: var(--card-bg);
 }
 
 .splide__slide .card-front,
@@ -396,7 +397,7 @@ html, body {
   height: 50px;
   border: none;
   background: white;
-  color: #FF9800;
+  color: var(--primary);
   font-size: 28px;
   font-weight: 700;
   border-radius: 50%;

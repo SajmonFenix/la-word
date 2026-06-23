@@ -1,6 +1,7 @@
 const COLORS = [
-  '#4A90D9', '#E74C3C', '#2ECC71', '#F39C12', '#9B59B6',
-  '#E91E63', '#00BCD4', '#FF9800', '#795548', '#607D8B'
+  '#c09f80', '#d8b5a5', '#e6c2a8', '#f0d9b5', '#f5e3c4',
+  '#e0d5b9', '#c4b5a6', '#b8a5a5', '#a79c9c', '#938e8c',
+  '#b5c6d8', '#c2d4e6', '#d0e2f1', '#e1f0fa', '#f2f9ff'
 ];
 
 let editingId = null;
