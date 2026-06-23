@@ -245,12 +245,12 @@ html, body {
 }
 
 .splide__slide .card {
-  width: 100%;
-  height: clamp(260px, 42vh, 380px);
-  cursor: pointer;
-  position: relative;
-  transition: transform 0.35s ease, opacity 0.35s ease;
-  transform-style: preserve-3d;
+   width: 100%;
+   height: clamp(300px, 55vh, 450px);
+   cursor: pointer;
+   position: relative;
+   transition: transform 0.35s ease, opacity 0.35s ease;
+   transform-style: preserve-3d;
 }
 
 .splide__slide.is-prev .card,
