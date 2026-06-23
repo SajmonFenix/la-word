@@ -96,7 +96,7 @@ const ui = {
       effect: 'coverflow',
       grabCursor: true,
       centeredSlides: true,
-      slidesPerView: 'auto',
+      slidesPerView: 3,
       loop: true,
       loopedSlides: 1,
       initialSlide: this._currentIndex,

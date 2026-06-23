@@ -206,7 +206,6 @@ html, body {
 }
 
 .swiper-slide {
-  width: clamp(120px, 28vw, 300px);
   display: flex;
   align-items: center;
   justify-content: center;
