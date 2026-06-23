@@ -384,12 +384,12 @@ html, body {
 /* ── Nav bottom ── */
 
 .nav-bottom {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  width: 100%;
-  padding: 0 24px 12px;
-  flex-shrink: 0;
+   display: flex;
+   align-items: center;
+   justify-content: space-between;
+   width: 100%;
+   padding: 24px 24px 12px;
+   flex-shrink: 0;
 }
 
 .nav-arrow {
