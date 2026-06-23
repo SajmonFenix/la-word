@@ -12,6 +12,10 @@
   <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
+  <div id="update-banner" class="app-banner hidden">
+    <span>Je dostupná nová verzia.</span>
+    <button id="btn-update-app" type="button">Aktualizovať</button>
+  </div>
   <div id="app">
     <header id="header">
       <h1>La Carta</h1>
@@ -48,6 +52,7 @@
 
   <div id="modal-overlay" class="hidden">
     <div id="modal">
+      <div class="sheet-handle" aria-hidden="true"></div>
       <h2 id="modal-title">Nová karta</h2>
       <form id="card-form">
         <div class="form-group">
@@ -64,6 +69,7 @@
             <input type="text" id="input-back" required autocomplete="off">
             <button type="button" id="btn-translate" title="Automaticky preložiť" aria-label="Automaticky preložiť"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M2 12h20"/><path d="M12 2a15.3 15.3 0 0 1 0 20"/><path d="M12 2a15.3 15.3 0 0 0 0 20"/></svg></button>
           </div>
+          <p id="translation-feedback" class="form-feedback hidden"></p>
         </div>
         <div class="form-group">
           <label>Farba karty</label>
@@ -80,20 +86,38 @@
 
   <div id="settings-overlay" class="hidden">
     <div id="settings-modal">
+      <div class="sheet-handle" aria-hidden="true"></div>
       <div class="settings-header">
         <h2 id="settings-title">Nastavenia</h2>
         <button id="btn-settings-close" class="settings-close-icon" aria-label="Zavrieť nastavenia">✕</button>
       </div>
-      <div class="settings-toggle">
-        <span>Navigačné šípky</span>
-        <label class="toggle">
-          <input type="checkbox" id="toggle-arrows" checked>
-          <span class="toggle-slider"></span>
-        </label>
+
+      <div id="settings-menu" class="settings-view">
+        <button class="settings-menu-item" type="button" data-settings-view="translation" aria-label="Preklad">
+          <span>Preklad</span>
+          <small>Jazyky automatického prekladu</small>
+          <span class="settings-menu-arrow" aria-hidden="true"></span>
+        </button>
+        <button class="settings-menu-item" type="button" data-settings-view="font" aria-label="Písmo">
+          <span>Písmo</span>
+          <small>Veľkosť textu na kartách</small>
+          <span class="settings-menu-arrow" aria-hidden="true"></span>
+        </button>
+        <button class="settings-menu-item" type="button" data-settings-view="navigation" aria-label="Navigácia">
+          <span>Navigácia</span>
+          <small>Zobrazenie šípok</small>
+          <span class="settings-menu-arrow" aria-hidden="true"></span>
+        </button>
+        <button class="settings-menu-item" type="button" data-settings-view="data" aria-label="Import / export">
+          <span>Import / export</span>
+          <small>Zálohovanie kariet</small>
+          <span class="settings-menu-arrow" aria-hidden="true"></span>
+        </button>
       </div>
 
-      <div class="settings-section">
-        <h3 class="settings-section-title">Preklad</h3>
+      <div id="settings-view-translation" class="settings-view settings-detail hidden">
+        <button class="settings-back" type="button">← Nastavenia</button>
+        <h3 class="settings-detail-title">Preklad</h3>
         <div class="translation-controls">
           <label for="select-source-lang">
             Z jazyka
@@ -118,9 +142,9 @@
         </div>
       </div>
 
-      <div class="settings-section">
-        <h3 class="settings-section-title">Veľkosť textu</h3>
-
+      <div id="settings-view-font" class="settings-view settings-detail hidden">
+        <button class="settings-back" type="button">← Nastavenia</button>
+        <h3 class="settings-detail-title">Písmo</h3>
         <div class="font-size-control">
           <label>Slovo (predná strana)</label>
           <div class="font-size-adjuster">
@@ -130,7 +154,6 @@
           </div>
           <div class="font-preview" id="front-preview">slovo</div>
         </div>
-
         <div class="font-size-control">
           <label>Preklad (zadná strana)</label>
           <div class="font-size-adjuster">
@@ -142,13 +165,42 @@
         </div>
       </div>
 
-      <div class="settings-actions">
-        <button id="btn-export" class="settings-btn">Exportovať karty</button>
-        <button id="btn-import" class="settings-btn">Importovať karty</button>
+      <div id="settings-view-navigation" class="settings-view settings-detail hidden">
+        <button class="settings-back" type="button">← Nastavenia</button>
+        <h3 class="settings-detail-title">Navigácia</h3>
+        <div class="settings-toggle">
+          <span>Navigačné šípky</span>
+          <label class="toggle">
+            <input type="checkbox" id="toggle-arrows" checked>
+            <span class="toggle-slider"></span>
+          </label>
+        </div>
       </div>
-      <p class="settings-info">Export vytvorí .json súbor so všetkými kartami. Import nahradí existujúce karty.</p>
+
+      <div id="settings-view-data" class="settings-view settings-detail hidden">
+        <button class="settings-back" type="button">← Nastavenia</button>
+        <h3 class="settings-detail-title">Import / export</h3>
+        <div class="settings-actions">
+          <button id="btn-export" class="settings-btn">Exportovať karty</button>
+          <button id="btn-import" class="settings-btn">Importovať karty</button>
+        </div>
+        <p class="settings-info">Export vytvorí .json súbor so všetkými kartami. Import nahradí existujúce karty.</p>
+      </div>
     </div>
   </div>
+
+  <div id="confirm-overlay" class="hidden">
+    <div id="confirm-dialog">
+      <h2 id="confirm-title">Importovať karty?</h2>
+      <p id="confirm-message">Import nahradí všetky existujúce karty.</p>
+      <div class="confirm-actions">
+        <button type="button" id="btn-confirm-cancel">Zrušiť</button>
+        <button type="button" id="btn-confirm-ok">Importovať</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="toast" class="toast hidden" role="status" aria-live="polite"></div>
 
   <script src="js/storage.js"></script>
   <script src="js/cards.js"></script>

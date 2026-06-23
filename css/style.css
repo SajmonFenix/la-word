@@ -33,6 +33,35 @@ html, body {
   flex-direction: column;
 }
 
+.app-banner {
+  position: fixed;
+  left: 16px;
+  right: 16px;
+  top: max(12px, env(safe-area-inset-top));
+  z-index: 220;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 14px;
+  border-radius: 14px;
+  background: white;
+  color: var(--text);
+  box-shadow: 0 8px 26px rgba(0,0,0,0.22);
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.app-banner button {
+  border: none;
+  border-radius: 10px;
+  padding: 9px 12px;
+  background: var(--primary);
+  color: white;
+  font-weight: 650;
+  cursor: pointer;
+}
+
 #header {
   display: flex;
   justify-content: space-between;
@@ -478,11 +507,26 @@ html, body {
   border-radius: 20px 20px 0 0;
   padding: 24px 24px max(24px, env(safe-area-inset-bottom));
   overflow-y: auto;
+  touch-action: pan-y;
+  transition: transform 0.22s ease;
 }
 
 #modal-title {
   font-size: 20px;
   margin-bottom: 20px;
+}
+
+.sheet-handle {
+  width: 44px;
+  height: 5px;
+  border-radius: 999px;
+  background: #d8d8d8;
+  margin: -10px auto 18px;
+}
+
+.sheet-dragging {
+  transition: none !important;
+  cursor: grabbing;
 }
 
 .form-group {
@@ -547,6 +591,20 @@ html, body {
   border-color: var(--primary);
 }
 
+.form-feedback {
+  margin-top: 8px;
+  font-size: 13px;
+  line-height: 1.35;
+}
+
+.form-feedback-error {
+  color: #c0392b;
+}
+
+.form-feedback-muted {
+  color: var(--text-secondary);
+}
+
 #color-picker {
   display: flex;
   flex-wrap: wrap;
@@ -609,7 +667,7 @@ html, body {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 14px 0;
+  padding: 2px 0 0;
   font-size: 16px;
   font-weight: 500;
 }
@@ -681,6 +739,8 @@ html, body {
   border-radius: 20px 20px 0 0;
   padding: 24px 24px max(24px, env(safe-area-inset-bottom));
   overflow-y: auto;
+  touch-action: pan-y;
+  transition: transform 0.22s ease;
 }
 
 .settings-header {
@@ -711,7 +771,63 @@ html, body {
   display: flex;
   flex-direction: column;
   gap: 12px;
-  margin-bottom: 16px;
+}
+
+.settings-view {
+  min-height: 260px;
+}
+
+.settings-menu-item {
+  width: 100%;
+  padding: 16px 0;
+  border: none;
+  border-bottom: 1px solid #e8e8e8;
+  background: transparent;
+  color: var(--text);
+  cursor: pointer;
+  text-align: left;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  position: relative;
+}
+
+.settings-menu-arrow {
+  position: absolute;
+  right: 4px;
+  top: 50%;
+  width: 10px;
+  height: 10px;
+  border-top: 2px solid var(--text-secondary);
+  border-right: 2px solid var(--text-secondary);
+  transform: translateY(-50%) rotate(45deg);
+}
+
+.settings-menu-item span {
+  font-size: 16px;
+  font-weight: 650;
+}
+
+.settings-menu-item small {
+  max-width: calc(100% - 34px);
+  color: var(--text-secondary);
+  font-size: 13px;
+}
+
+.settings-detail-title {
+  font-size: 18px;
+  margin-bottom: 18px;
+}
+
+.settings-back {
+  border: none;
+  background: transparent;
+  color: var(--primary);
+  font-size: 15px;
+  font-weight: 650;
+  padding: 0;
+  margin-bottom: 18px;
+  cursor: pointer;
 }
 
 .settings-btn {
@@ -735,11 +851,84 @@ html, body {
   font-size: 13px;
   color: var(--text-secondary);
   line-height: 1.5;
-  margin-bottom: 16px;
+  margin-top: 12px;
 }
 
 .settings-close-icon:active {
    opacity: 0.7;
+}
+
+#confirm-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 240;
+  background: rgba(0,0,0,0.42);
+  display: flex;
+  align-items: flex-end;
+  padding: 16px;
+}
+
+#confirm-overlay.hidden {
+  display: none;
+}
+
+#confirm-dialog {
+  width: 100%;
+  background: white;
+  border-radius: 18px;
+  padding: 20px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.24);
+}
+
+#confirm-title {
+  font-size: 20px;
+  margin-bottom: 8px;
+}
+
+#confirm-message {
+  color: var(--text-secondary);
+  line-height: 1.45;
+  margin-bottom: 18px;
+}
+
+.confirm-actions {
+  display: flex;
+  gap: 12px;
+}
+
+.confirm-actions button {
+  flex: 1;
+  border: none;
+  border-radius: 12px;
+  padding: 13px;
+  font-size: 16px;
+  font-weight: 650;
+  cursor: pointer;
+}
+
+#btn-confirm-cancel {
+  background: #f0f0f0;
+  color: var(--text);
+}
+
+#btn-confirm-ok {
+  background: var(--primary);
+  color: white;
+}
+
+.toast {
+  position: fixed;
+  left: 16px;
+  right: 16px;
+  bottom: max(16px, env(safe-area-inset-bottom));
+  z-index: 260;
+  padding: 13px 16px;
+  border-radius: 14px;
+  background: rgba(20, 27, 42, 0.94);
+  color: white;
+  font-size: 14px;
+  text-align: center;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.22);
 }
 
 /* ── Font Size Settings ── */
@@ -748,6 +937,12 @@ html, body {
    margin-bottom: 24px;
    padding-bottom: 16px;
    border-bottom: 1px solid #e0e0e0;
+}
+
+.settings-section:last-child {
+   margin-bottom: 0;
+   padding-bottom: 0;
+   border-bottom: none;
 }
 
 .settings-section-title {

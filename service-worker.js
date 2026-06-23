@@ -1,4 +1,4 @@
-const CACHE = 'la-word-v2';
+const CACHE = 'la-word-v3';
 const APP_SHELL = [
   './',
   './index.html',
@@ -21,10 +21,22 @@ self.addEventListener('install', (event) => {
 
 self.addEventListener('activate', (event) => {
   event.waitUntil(
-    caches.keys().then((keys) => (
-      Promise.all(keys.filter((key) => key !== CACHE).map((key) => caches.delete(key)))
-    )).then(() => self.clients.claim())
-  );
+    caches.keys().then((keys) => {
+      const oldCaches = keys.filter((key) => key !== CACHE);
+      return Promise.all(oldCaches.map((key) => caches.delete(key)))
+        .then(() => self.clients.claim())
+        .then(() => oldCaches.length > 0 ? self.clients.matchAll({ type: 'window' }) : [])
+        .then((clients) => {
+          clients.forEach((client) => client.postMessage({ type: 'APP_UPDATE_READY' }));
+        });
+      })
+   );
+});
+
+self.addEventListener('message', (event) => {
+  if (event.data?.type === 'SKIP_WAITING') {
+    self.skipWaiting();
+  }
 });
 
 self.addEventListener('fetch', (event) => {

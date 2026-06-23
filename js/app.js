@@ -5,11 +5,16 @@ const COLORS = [
 ];
 const TRANSLATE_ICON = '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M2 12h20"/><path d="M12 2a15.3 15.3 0 0 1 0 20"/><path d="M12 2a15.3 15.3 0 0 0 0 20"/></svg>';
 const TRANSLATION_LANGUAGES = ['sk', 'en', 'de', 'es', 'it'];
+const SHEET_DISMISS_THRESHOLD = 80;
+const INTERACTIVE_SHEET_SELECTOR = 'input, select, textarea, button, .color-option, label, a';
+const UPDATE_MESSAGE_TYPE = 'APP_UPDATE_READY';
 
 let editingId = null;
 let _searchActive = false;
 let fontSizes = { front: 100, back: 100 };
 let translationSettings = { source: 'sk', target: 'en' };
+let pendingConfirmResolve = null;
+let waitingServiceWorker = null;
 
 // Font size constraints
 const FONT_SIZE_MIN = 70;
@@ -62,6 +67,7 @@ async function init() {
    loadFontSizes();
    loadTranslationSettings();
    bindEvents();
+   initServiceWorkerUpdates();
 }
 
 function bindEvents() {
@@ -73,6 +79,7 @@ function bindEvents() {
    document.getElementById('card-form').addEventListener('submit', handleFormSubmit);
    document.getElementById('btn-delete').addEventListener('click', handleDelete);
    document.getElementById('btn-translate').addEventListener('click', handleTranslate);
+   document.getElementById('btn-update-app').addEventListener('click', applyAppUpdate);
    document.getElementById('btn-settings').addEventListener('click', openSettings);
    document.getElementById('btn-settings-close').addEventListener('click', closeSettings);
    document.getElementById('btn-export').addEventListener('click', handleExport);
@@ -102,6 +109,19 @@ function bindEvents() {
    document.getElementById('btn-back-plus').addEventListener('click', () => adjustFontSize('back', 1));
    document.getElementById('select-source-lang').addEventListener('change', handleTranslationSettingsChange);
    document.getElementById('select-target-lang').addEventListener('change', handleTranslationSettingsChange);
+   document.querySelectorAll('[data-settings-view]').forEach((button) => {
+     button.addEventListener('click', () => showSettingsView(button.dataset.settingsView));
+   });
+   document.querySelectorAll('.settings-back').forEach((button) => {
+     button.addEventListener('click', () => showSettingsView('menu'));
+   });
+   document.getElementById('btn-confirm-cancel').addEventListener('click', () => resolveConfirm(false));
+   document.getElementById('btn-confirm-ok').addEventListener('click', () => resolveConfirm(true));
+   document.getElementById('confirm-overlay').addEventListener('click', (e) => {
+     if (e.target === e.currentTarget) resolveConfirm(false);
+   });
+   bindDismissibleSheet('modal-overlay', 'modal', closeModal);
+   bindDismissibleSheet('settings-overlay', 'settings-modal', closeSettings);
 }
 
 function openAddModal(cardData) {
@@ -113,6 +133,7 @@ function openAddModal(cardData) {
   document.getElementById('input-front').value = cardData?.front || '';
   document.getElementById('input-hint').value = cardData?.hint || '';
   document.getElementById('input-back').value = cardData?.back || '';
+  setTranslationFeedback('');
   renderColorPicker(cardData?.color || COLORS[Math.floor(Math.random() * COLORS.length)]);
   document.getElementById('modal-overlay').classList.remove('hidden');
   document.getElementById('input-front').focus();
@@ -167,9 +188,10 @@ function handleFormSubmit(e) {
   ui.refresh();
 }
 
-function handleDelete() {
+async function handleDelete() {
   if (!editingId) return;
-  if (!confirm('Naozaj chceš vymazať túto kartu?')) return;
+  const confirmed = await showConfirm(getDeleteConfirmCopy());
+  if (!confirmed) return;
   cards.delete(editingId);
   closeModal();
   ui.refresh();
@@ -190,6 +212,7 @@ async function handleTranslate() {
     return;
   }
 
+  setTranslationFeedback('Prekladám...', 'muted');
   translateBtn.textContent = '...';
   translateBtn.disabled = true;
 
@@ -200,9 +223,12 @@ async function handleTranslate() {
     const data = await response.json();
     if (data.responseData?.translatedText) {
       backInput.value = data.responseData.translatedText;
+      setTranslationFeedback('');
+    } else {
+      setTranslationFeedback(getTranslationFailureMessage(), 'error');
     }
   } catch {
-    // silent fail
+    setTranslationFeedback(getTranslationFailureMessage(), 'error');
   } finally {
     translateBtn.innerHTML = TRANSLATE_ICON;
     translateBtn.disabled = false;
@@ -213,11 +239,13 @@ function openSettings() {
   document.getElementById('toggle-arrows').checked = ui._showArrows;
   translationSettings = storage.loadTranslationSettings();
   updateTranslationSettingsUI();
+  showSettingsView('menu');
   document.getElementById('settings-overlay').classList.remove('hidden');
 }
 
 function closeSettings() {
   document.getElementById('settings-overlay').classList.add('hidden');
+  showSettingsView('menu');
 }
 
 function handleExport() {
@@ -238,16 +266,17 @@ async function handleImport() {
   input.onchange = async () => {
     const file = input.files[0];
     if (!file) return;
-    if (!confirm('Import nahradí všetky existujúce karty. Pokračovať?')) return;
+    const confirmed = await showConfirm(getImportConfirmCopy());
+    if (!confirmed) return;
     try {
       const text = await file.text();
       await storage.importData(text);
       await cards.init();
       ui.init();
       closeSettings();
-      alert('Karty boli úspešne importované.');
+      showToast('Karty boli úspešne importované.');
     } catch {
-      alert('Chyba: neplatný súbor.');
+      showToast('Chyba: neplatný súbor.');
     }
   };
   input.click();
@@ -310,6 +339,177 @@ function handleTranslationSettingsChange() {
    storage.saveTranslationSettings(source, target);
    translationSettings = storage.loadTranslationSettings();
    updateTranslationSettingsUI();
+}
+
+function showSettingsView(viewName) {
+   const menu = document.getElementById('settings-menu');
+   const details = document.querySelectorAll('.settings-detail');
+
+   menu.classList.toggle('hidden', viewName !== 'menu');
+   details.forEach((detail) => detail.classList.add('hidden'));
+
+   if (viewName !== 'menu') {
+      document.getElementById(`settings-view-${viewName}`)?.classList.remove('hidden');
+   }
+}
+
+function getTranslationFailureMessage() {
+   return 'Preklad sa nepodaril. Skús to znova alebo ho dopíš ručne.';
+}
+
+function getImportConfirmCopy() {
+   return {
+      title: 'Importovať karty?',
+      message: 'Import nahradí všetky existujúce karty.',
+      confirmText: 'Importovať',
+      cancelText: 'Zrušiť'
+   };
+}
+
+function getDeleteConfirmCopy() {
+   return {
+      title: 'Vymazať kartu?',
+      message: 'Táto karta sa odstráni natrvalo.',
+      confirmText: 'Vymazať',
+      cancelText: 'Zrušiť'
+   };
+}
+
+function isServiceWorkerUpdateMessage(data) {
+   return data?.type === UPDATE_MESSAGE_TYPE;
+}
+
+function setTranslationFeedback(message, type = '') {
+   const el = document.getElementById('translation-feedback');
+   el.textContent = message;
+   el.classList.toggle('hidden', !message);
+   el.classList.toggle('form-feedback-error', type === 'error');
+   el.classList.toggle('form-feedback-muted', type === 'muted');
+}
+
+function showConfirm(copy) {
+   document.getElementById('confirm-title').textContent = copy.title;
+   document.getElementById('confirm-message').textContent = copy.message;
+   document.getElementById('btn-confirm-ok').textContent = copy.confirmText;
+   document.getElementById('btn-confirm-cancel').textContent = copy.cancelText;
+   document.getElementById('confirm-overlay').classList.remove('hidden');
+
+   return new Promise((resolve) => {
+      pendingConfirmResolve = resolve;
+   });
+}
+
+function resolveConfirm(result) {
+   document.getElementById('confirm-overlay').classList.add('hidden');
+   if (pendingConfirmResolve) {
+      pendingConfirmResolve(result);
+      pendingConfirmResolve = null;
+   }
+}
+
+function showToast(message) {
+   const toast = document.getElementById('toast');
+   toast.textContent = message;
+   toast.classList.remove('hidden');
+   clearTimeout(showToast._timeout);
+   showToast._timeout = setTimeout(() => toast.classList.add('hidden'), 2600);
+}
+
+function initServiceWorkerUpdates() {
+   if (!('serviceWorker' in navigator)) return;
+
+   navigator.serviceWorker.addEventListener('message', (event) => {
+      if (isServiceWorkerUpdateMessage(event.data)) {
+         showUpdateBanner();
+      }
+   });
+
+   navigator.serviceWorker.ready.then((registration) => {
+      if (registration.waiting) {
+         waitingServiceWorker = registration.waiting;
+         showUpdateBanner();
+      }
+
+      registration.addEventListener('updatefound', () => {
+         const worker = registration.installing;
+         if (!worker) return;
+         worker.addEventListener('statechange', () => {
+            if (worker.state === 'installed' && navigator.serviceWorker.controller) {
+               waitingServiceWorker = worker;
+               showUpdateBanner();
+            }
+         });
+      });
+   });
+
+   let refreshing = false;
+   navigator.serviceWorker.addEventListener('controllerchange', () => {
+      if (refreshing) return;
+      refreshing = true;
+      window.location.reload();
+   });
+}
+
+function showUpdateBanner() {
+   document.getElementById('update-banner').classList.remove('hidden');
+}
+
+function applyAppUpdate() {
+   document.getElementById('update-banner').classList.add('hidden');
+   if (waitingServiceWorker) {
+      waitingServiceWorker.postMessage({ type: 'SKIP_WAITING' });
+      return;
+   }
+   window.location.reload();
+}
+
+function shouldStartSheetDrag(target) {
+   return !target.closest(INTERACTIVE_SHEET_SELECTOR);
+}
+
+function shouldCloseSheet(deltaY) {
+   return deltaY >= SHEET_DISMISS_THRESHOLD;
+}
+
+function bindDismissibleSheet(overlayId, sheetId, closeFn) {
+   const overlay = document.getElementById(overlayId);
+   const sheet = document.getElementById(sheetId);
+   let startY = 0;
+   let currentY = 0;
+   let isDragging = false;
+
+   sheet.addEventListener('pointerdown', (e) => {
+      if (!shouldStartSheetDrag(e.target)) return;
+      startY = e.clientY;
+      currentY = e.clientY;
+      isDragging = true;
+      sheet.classList.add('sheet-dragging');
+      sheet.setPointerCapture(e.pointerId);
+   });
+
+   sheet.addEventListener('pointermove', (e) => {
+      if (!isDragging) return;
+      currentY = e.clientY;
+      const deltaY = Math.max(0, currentY - startY);
+      sheet.style.transform = `translateY(${deltaY}px)`;
+      overlay.style.background = `rgba(0,0,0,${Math.max(0.18, 0.4 - deltaY / 500)})`;
+   });
+
+   const endDrag = () => {
+      if (!isDragging) return;
+      const deltaY = Math.max(0, currentY - startY);
+      isDragging = false;
+      sheet.classList.remove('sheet-dragging');
+      sheet.style.transform = '';
+      overlay.style.background = '';
+
+      if (shouldCloseSheet(deltaY)) {
+         closeFn();
+      }
+   };
+
+   sheet.addEventListener('pointerup', endDrag);
+   sheet.addEventListener('pointercancel', endDrag);
 }
 
 document.addEventListener('DOMContentLoaded', init);
