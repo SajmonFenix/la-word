@@ -7,11 +7,8 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <title>La Carta</title>
   <link rel="manifest" href="manifest.json">
+  <link rel="icon" href="icons/icon-192.png" type="image/png">
   <link rel="apple-touch-icon" href="icons/icon-192.png">
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Pompiere&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@splidejs/splide@4.1.4/dist/css/splide-core.min.css">
   <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
@@ -65,7 +62,7 @@
           <label for="input-back">Preklad</label>
           <div class="input-with-button">
             <input type="text" id="input-back" required autocomplete="off">
-            <button type="button" id="btn-translate" title="Automaticky preložiť">🌐</button>
+            <button type="button" id="btn-translate" title="Automaticky preložiť" aria-label="Automaticky preložiť"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M2 12h20"/><path d="M12 2a15.3 15.3 0 0 1 0 20"/><path d="M12 2a15.3 15.3 0 0 0 0 20"/></svg></button>
           </div>
         </div>
         <div class="form-group">
@@ -83,7 +80,10 @@
 
   <div id="settings-overlay" class="hidden">
     <div id="settings-modal">
-      <h2 id="settings-title">Nastavenia</h2>
+      <div class="settings-header">
+        <h2 id="settings-title">Nastavenia</h2>
+        <button id="btn-settings-close" class="settings-close-icon" aria-label="Zavrieť nastavenia">✕</button>
+      </div>
       <div class="settings-toggle">
         <span>Navigačné šípky</span>
         <label class="toggle">
@@ -92,11 +92,35 @@
         </label>
       </div>
 
-      <!-- Font Size Settings -->
+      <div class="settings-section">
+        <h3 class="settings-section-title">Preklad</h3>
+        <div class="translation-controls">
+          <label for="select-source-lang">
+            Z jazyka
+            <select id="select-source-lang">
+              <option value="sk">Slovenčina</option>
+              <option value="en">Angličtina</option>
+              <option value="de">Nemčina</option>
+              <option value="es">Španielčina</option>
+              <option value="it">Taliančina</option>
+            </select>
+          </label>
+          <label for="select-target-lang">
+            Do jazyka
+            <select id="select-target-lang">
+              <option value="sk">Slovenčina</option>
+              <option value="en">Angličtina</option>
+              <option value="de">Nemčina</option>
+              <option value="es">Španielčina</option>
+              <option value="it">Taliančina</option>
+            </select>
+          </label>
+        </div>
+      </div>
+
       <div class="settings-section">
         <h3 class="settings-section-title">Veľkosť textu</h3>
-        
-        <!-- Front text size -->
+
         <div class="font-size-control">
           <label>Slovo (predná strana)</label>
           <div class="font-size-adjuster">
@@ -104,10 +128,9 @@
             <span class="font-size-value" id="front-size-value">100%</span>
             <button type="button" class="font-size-btn" id="btn-front-plus">+</button>
           </div>
-          <div class="font-preview" id="front-preview">asdfasdf</div>
+          <div class="font-preview" id="front-preview">slovo</div>
         </div>
 
-        <!-- Back text size -->
         <div class="font-size-control">
           <label>Preklad (zadná strana)</label>
           <div class="font-size-adjuster">
@@ -120,15 +143,13 @@
       </div>
 
       <div class="settings-actions">
-        <button id="btn-export" class="settings-btn">📥 Exportovať karty</button>
-        <button id="btn-import" class="settings-btn">📤 Importovať karty</button>
+        <button id="btn-export" class="settings-btn">Exportovať karty</button>
+        <button id="btn-import" class="settings-btn">Importovať karty</button>
       </div>
       <p class="settings-info">Export vytvorí .json súbor so všetkými kartami. Import nahradí existujúce karty.</p>
-      <button id="btn-settings-close" class="settings-close">Zavrieť</button>
     </div>
   </div>
 
-  <script src="https://cdn.jsdelivr.net/npm/@splidejs/splide@4.1.4/dist/js/splide.min.js"></script>
   <script src="js/storage.js"></script>
   <script src="js/cards.js"></script>
   <script src="js/ui.js"></script>

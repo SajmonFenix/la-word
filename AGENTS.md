@@ -4,7 +4,8 @@ PWA aplikácia na učenie sa slovíčok pomocou otočných kartičiek.
 
 ## Stack
 - Vanilla HTML/CSS/JS (žiadny framework)
-- localStorage pre ukladanie dát
+- IndexedDB pre primárne ukladanie dát
+- localStorage ako fallback a záloha
 - Service Worker pre offline režim
 - MyMemory API pre automatický preklad
 
@@ -19,9 +20,9 @@ la-word/
 ├── js/
 │   ├── app.js            # Inicializácia, eventy, routing
 │   ├── cards.js          # CRUD operácie s kartami
-│   ├── storage.js        # localStorage persistence
-│   └── ui.js             # DOM manipulácia, renderovanie
-├── plans/                # Implementačné plány
+│   ├── storage.js        # IndexedDB + localStorage persistence
+│   └── ui.js             # DOM manipulácia, vlastný slider, renderovanie
+├── docs/superpowers/     # Špecifikácie a plány
 ├── AGENTS.md
 ```
 
@@ -30,7 +31,8 @@ la-word/
 - CSS triedy: kebab-case
 - JS funkcie: camelCase
 - localStorage kľúč: `laword_cards`
-- Žiadne externé knižnice — čistý vanilla JS
+- IndexedDB databáza: `laword`, store: `cards`
+- Žiadne externé knižnice — čistý vanilla JS/CSS
 
 ## Cards dátová štruktúra
 ```js

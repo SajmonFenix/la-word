@@ -3,10 +3,13 @@ const COLORS = [
    '#e0d5b9', '#c4b5a6', '#b8a5a5', '#a79c9c', '#938e8c',
    '#b5c6d8', '#c2d4e6', '#d0e2f1', '#e1f0fa', '#f2f9ff'
 ];
+const TRANSLATE_ICON = '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M2 12h20"/><path d="M12 2a15.3 15.3 0 0 1 0 20"/><path d="M12 2a15.3 15.3 0 0 0 0 20"/></svg>';
+const TRANSLATION_LANGUAGES = ['sk', 'en', 'de', 'es', 'it'];
 
 let editingId = null;
 let _searchActive = false;
 let fontSizes = { front: 100, back: 100 };
+let translationSettings = { source: 'sk', target: 'en' };
 
 // Font size constraints
 const FONT_SIZE_MIN = 70;
@@ -57,6 +60,7 @@ async function init() {
    ui.onEditCard = (cardData) => openAddModal(cardData);
    ui.init();
    loadFontSizes();
+   loadTranslationSettings();
    bindEvents();
 }
 
@@ -96,6 +100,8 @@ function bindEvents() {
    document.getElementById('btn-front-plus').addEventListener('click', () => adjustFontSize('front', 1));
    document.getElementById('btn-back-minus').addEventListener('click', () => adjustFontSize('back', -1));
    document.getElementById('btn-back-plus').addEventListener('click', () => adjustFontSize('back', 1));
+   document.getElementById('select-source-lang').addEventListener('change', handleTranslationSettingsChange);
+   document.getElementById('select-target-lang').addEventListener('change', handleTranslationSettingsChange);
 }
 
 function openAddModal(cardData) {
@@ -188,7 +194,8 @@ async function handleTranslate() {
   translateBtn.disabled = true;
 
   try {
-    const url = `https://api.mymemory.translated.net/get?q=${encodeURIComponent(front)}&langpair=sk|en`;
+    const { source, target } = storage.loadTranslationSettings();
+    const url = `https://api.mymemory.translated.net/get?q=${encodeURIComponent(front)}&langpair=${source}|${target}`;
     const response = await fetch(url);
     const data = await response.json();
     if (data.responseData?.translatedText) {
@@ -197,13 +204,15 @@ async function handleTranslate() {
   } catch {
     // silent fail
   } finally {
-    translateBtn.textContent = '🌐';
+    translateBtn.innerHTML = TRANSLATE_ICON;
     translateBtn.disabled = false;
   }
 }
 
 function openSettings() {
   document.getElementById('toggle-arrows').checked = ui._showArrows;
+  translationSettings = storage.loadTranslationSettings();
+  updateTranslationSettingsUI();
   document.getElementById('settings-overlay').classList.remove('hidden');
 }
 
@@ -229,11 +238,12 @@ async function handleImport() {
   input.onchange = async () => {
     const file = input.files[0];
     if (!file) return;
+    if (!confirm('Import nahradí všetky existujúce karty. Pokračovať?')) return;
     try {
       const text = await file.text();
       await storage.importData(text);
-                    await cards.init();
-                    ui.init();
+      await cards.init();
+      ui.init();
       closeSettings();
       alert('Karty boli úspešne importované.');
     } catch {
@@ -279,6 +289,27 @@ function updateFontSizeUI() {
 function loadFontSizes() {
    fontSizes = storage.loadFontSizes();
    updateFontSizeUI();
+}
+
+function loadTranslationSettings() {
+   translationSettings = storage.loadTranslationSettings();
+   updateTranslationSettingsUI();
+}
+
+function updateTranslationSettingsUI() {
+   document.getElementById('select-source-lang').value = translationSettings.source;
+   document.getElementById('select-target-lang').value = translationSettings.target;
+}
+
+function handleTranslationSettingsChange() {
+   const source = document.getElementById('select-source-lang').value;
+   let target = document.getElementById('select-target-lang').value;
+   if (source === target) {
+      target = TRANSLATION_LANGUAGES.find(lang => lang !== source) || 'en';
+   }
+   storage.saveTranslationSettings(source, target);
+   translationSettings = storage.loadTranslationSettings();
+   updateTranslationSettingsUI();
 }
 
 document.addEventListener('DOMContentLoaded', init);
