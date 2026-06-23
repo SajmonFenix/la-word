@@ -193,9 +193,10 @@ html, body {
 }
 
 .swiper {
-  width: 320px;
-  height: 430px;
-  padding: 50px 0;
+  width: 90vw;
+  max-width: 800px;
+  height: clamp(300px, 50vh, 420px);
+  padding: clamp(16px, 3vh, 40px) 0;
   margin: 0;
   overflow: visible;
 }
@@ -205,8 +206,7 @@ html, body {
 }
 
 .swiper-slide {
-  width: 280px;
-  height: 370px;
+  width: clamp(120px, 28vw, 300px);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -231,7 +231,7 @@ html, body {
 }
 
 .swiper-slide-active .card-inner {
-  box-shadow: 0 8px 30px rgba(0,0,0,0.25);
+  box-shadow: 0 8px 30px rgba(0,0,0,0.3);
 }
 
 .swiper-slide .card.flipped .card-inner {
@@ -249,63 +249,68 @@ html, body {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 24px;
+  padding: clamp(10px, 2.5vw, 20px);
+  overflow: hidden;
 }
 
 .swiper-slide .card-back {
   transform: rotateY(180deg);
 }
 
-.swiper-slide-active .card-front-text {
-  font-size: 64px;
-}
-
 .swiper-slide .card-front-text {
-  font-size: 36px;
+  font-size: clamp(16px, 4.5vw, 32px);
   font-weight: 700;
   text-align: center;
   word-break: break-word;
   color: white;
+  max-width: 100%;
 }
 
-.swiper-slide-active .hint {
-  font-size: 16px;
+.swiper-slide-active .card-front-text {
+  font-size: clamp(26px, 8vw, 58px);
 }
 
 .swiper-slide .hint {
-  font-size: 13px;
+  font-size: clamp(9px, 2vw, 12px);
   color: white;
   font-style: italic;
-  margin-top: 8px;
+  margin-top: 3px;
   text-align: center;
   opacity: 0.85;
+  max-width: 100%;
 }
 
-.swiper-slide-active .card-back-text {
-  font-size: 40px;
+.swiper-slide-active .hint {
+  font-size: clamp(11px, 2.8vw, 15px);
+  margin-top: 5px;
 }
 
 .swiper-slide .card-back-text {
-  font-size: 28px;
+  font-size: clamp(14px, 3.5vw, 24px);
   text-align: center;
   word-break: break-word;
   color: white;
+  max-width: 100%;
+}
+
+.swiper-slide-active .card-back-text {
+  font-size: clamp(18px, 5.5vw, 36px);
 }
 
 .swiper-slide .card-back-actions {
   position: absolute;
-  bottom: 12px;
+  bottom: clamp(4px, 1.5vh, 10px);
   display: flex;
-  gap: 12px;
+  gap: clamp(4px, 1.5vw, 10px);
 }
 
 .swiper-slide .card-back-actions button {
   background: rgba(0,0,0,0.15);
   border: none;
-  font-size: 18px;
+  font-size: clamp(11px, 2.5vw, 16px);
   cursor: pointer;
-  width: 36px;
-  height: 36px;
+  width: clamp(22px, 5vw, 32px);
+  height: clamp(22px, 5vw, 32px);
   border-radius: 50%;
   display: flex;
   align-items: center;
@@ -321,9 +326,9 @@ html, body {
 }
 
 .swiper-slide-active .card-back-actions button {
-  width: 40px;
-  height: 40px;
-  font-size: 20px;
+  width: clamp(26px, 5vw, 38px);
+  height: clamp(26px, 5vw, 38px);
+  font-size: clamp(12px, 3vw, 18px);
 }
 
 /* ── Nav arrows ── */
