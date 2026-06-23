@@ -98,9 +98,10 @@ const ui = {
       centeredSlides: true,
       slidesPerView: 'auto',
       loop: true,
+      loopedSlides: 1,
       initialSlide: this._currentIndex,
       coverflowEffect: {
-        rotate: 25,
+        rotate: 0,
         stretch: 0,
         depth: 200,
         modifier: 1.5,
@@ -115,6 +116,7 @@ const ui = {
           if (this._swiper) {
             this._currentIndex = this._swiper.realIndex;
             this._updateCounter();
+            this._unflipAllCards();
           }
         },
       },
@@ -152,7 +154,7 @@ const ui = {
     if (idx !== -1) {
       this._currentIndex = idx;
       if (this._swiper) {
-        this._swiper.slideTo(idx);
+        this._swiper.slideToLoop(idx, 0);
       }
     }
   },
@@ -184,6 +186,12 @@ const ui = {
   _applyArrowsVisibility() {
     document.getElementById('btn-prev').classList.toggle('hidden', !this._showArrows);
     document.getElementById('btn-next').classList.toggle('hidden', !this._showArrows);
+  },
+
+  _unflipAllCards() {
+    document.querySelectorAll('.swiper-slide .card.flipped').forEach(card => {
+      card.classList.remove('flipped');
+    });
   },
 
   search(query) {

@@ -312,7 +312,7 @@ html, body {
   justify-content: center;
   opacity: 0.8;
   transition: opacity 0.2s, background 0.2s;
-  backdrop-filter: blur(2px);
+
 }
 
 .swiper-slide .card-back-actions button:active {
