@@ -198,14 +198,15 @@ html, body {
 }
 
 #main {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: flex-start;
-  position: relative;
-  overflow: hidden;
-  padding-top: clamp(20px, 4vh, 50px);
+   flex: 1;
+   display: flex;
+   flex-direction: column;
+   align-items: center;
+   justify-content: space-between;
+   position: relative;
+   overflow: hidden;
+   padding-top: clamp(20px, 4vh, 50px);
+   padding-bottom: 0;
 }
 
 #empty-state {
