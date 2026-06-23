@@ -1,8 +1,10 @@
 const STORAGE_KEY_SHOW_ARROWS = 'laword_show_arrows';
 
+const PENCIL_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.83 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg>';
+
 const ui = {
   _currentIndex: 0,
-  _swiper: null,
+  _splide: null,
   _clickHandler: null,
   onEditCard: null,
   _showArrows: true,
@@ -31,7 +33,7 @@ const ui = {
     const cardArea = document.getElementById('card-area');
 
     if (all.length === 0) {
-      container.innerHTML = '<div class="swiper-wrapper"></div>';
+      container.innerHTML = '<div class="splide__track"><div class="splide__list"></div></div>';
       container.classList.add('hidden');
       emptyState.classList.remove('hidden');
       cardArea.classList.add('hidden');
@@ -47,34 +49,35 @@ const ui = {
       this._currentIndex = Math.max(0, all.length - 1);
     }
 
-    if (this._swiper) {
-      this._swiper.destroy(true, true);
-      this._swiper = null;
+    if (this._splide) {
+      this._splide.destroy(true);
+      this._splide = null;
     }
 
     if (this._clickHandler) {
       container.removeEventListener('click', this._clickHandler);
     }
 
-    const wrapper = document.createElement('div');
-    wrapper.className = 'swiper-wrapper';
+    const track = document.createElement('div');
+    track.className = 'splide__track';
+
+    const list = document.createElement('div');
+    list.className = 'splide__list';
 
     all.forEach((card, i) => {
       const slide = document.createElement('div');
-      slide.className = 'swiper-slide';
+      slide.className = 'splide__slide';
 
       slide.innerHTML = `
         <div class="card">
-          <div class="card-inner">
-            <div class="card-front" style="background:${card.color}">
-              <span class="card-front-text"></span>
-              <span class="hint"></span>
-            </div>
-            <div class="card-back" style="background:${card.color}">
-              <span class="card-back-text"></span>
-              <div class="card-back-actions">
-                <button class="btn-edit" title="Upraviť">✏️</button>
-              </div>
+          <div class="card-front" style="background:${card.color}">
+            <span class="card-front-text"></span>
+            <span class="hint"></span>
+          </div>
+          <div class="card-back" style="background:${card.color}">
+            <span class="card-back-text"></span>
+            <div class="card-back-actions">
+              <button class="btn-edit" title="Upraviť">${PENCIL_SVG}</button>
             </div>
           </div>
         </div>
@@ -86,59 +89,51 @@ const ui = {
       hintEl.style.display = card.hint ? '' : 'none';
       slide.querySelector('.card-back-text').textContent = card.back;
 
-      wrapper.appendChild(slide);
+      list.appendChild(slide);
     });
 
+    track.appendChild(list);
     container.innerHTML = '';
-    container.appendChild(wrapper);
+    container.appendChild(track);
 
-    this._swiper = new Swiper(container, {
-      effect: 'coverflow',
-      grabCursor: true,
-      centeredSlides: true,
-      slidesPerView: 'auto',
-      spaceBetween: -30,
-      loop: true,
-      loopedSlides: 1,
-      initialSlide: this._currentIndex,
-      coverflowEffect: {
-        rotate: 0,
-        stretch: 0,
-        depth: 100,
-        modifier: 1.5,
-        slideShadows: false,
-      },
-      navigation: {
-        prevEl: '#btn-prev',
-        nextEl: '#btn-next',
-      },
-      on: {
-        slideChange: () => {
-          if (this._swiper) {
-            this._currentIndex = this._swiper.realIndex;
-            this._updateCounter();
-            this._unflipAllCards();
-          }
-        },
-      },
+    this._splide = new Splide(container, {
+      type: 'loop',
+      perPage: 1,
+      perMove: 1,
+      gap: '8px',
+      padding: { left: '15vw', right: '15vw' },
+      focus: 'center',
+      pagination: false,
+      arrows: false,
+      trimSpace: true,
+      speed: 400,
+      start: this._currentIndex,
     });
+
+    this._splide.on('mounted move', () => {
+      this._currentIndex = this._splide.index;
+      this._updateCounter();
+      this._unflipAllCards();
+    });
+
+    this._splide.mount();
 
     this._clickHandler = (e) => {
       const btn = e.target.closest('.btn-edit');
       if (btn) {
         e.stopPropagation();
-        const slide = btn.closest('.swiper-slide');
-        const idx = Array.from(wrapper.children).indexOf(slide);
+        const slide = btn.closest('.splide__slide');
+        const idx = Array.from(list.children).indexOf(slide);
         if (this.onEditCard) {
           this.onEditCard(all[idx]);
         }
         return;
       }
 
-      const cardEl = e.target.closest('.swiper-slide .card');
+      const cardEl = e.target.closest('.splide__slide .card');
       if (cardEl) {
-        const slide = cardEl.closest('.swiper-slide');
-        if (slide && slide.classList.contains('swiper-slide-active')) {
+        const slide = cardEl.closest('.splide__slide');
+        if (slide && slide.classList.contains('is-active')) {
           cardEl.classList.toggle('flipped');
         }
       }
@@ -154,18 +149,18 @@ const ui = {
     const idx = all.findIndex(c => c.id === id);
     if (idx !== -1) {
       this._currentIndex = idx;
-      if (this._swiper) {
-        this._swiper.slideToLoop(idx, 0);
+      if (this._splide) {
+        this._splide.go(idx);
       }
     }
   },
 
   showNext() {
-    if (this._swiper) this._swiper.slideNext();
+    if (this._splide) this._splide.go('>');
   },
 
   showPrev() {
-    if (this._swiper) this._swiper.slidePrev();
+    if (this._splide) this._splide.go('<');
   },
 
   _updateCounter() {
@@ -190,7 +185,7 @@ const ui = {
   },
 
   _unflipAllCards() {
-    document.querySelectorAll('.swiper-slide .card.flipped').forEach(card => {
+    document.querySelectorAll('.splide__slide .card.flipped').forEach(card => {
       card.classList.remove('flipped');
     });
   },
@@ -209,8 +204,8 @@ const ui = {
     if (idx === -1) return null;
 
     this._currentIndex = idx;
-    if (this._swiper) {
-      this._swiper.slideToLoop(idx, 300);
+    if (this._splide) {
+      this._splide.go(idx);
     }
     return idx;
   },

@@ -80,6 +80,8 @@ function bindEvents() {
     if (e.key === 'Enter') handleSearch();
     if (e.key === 'Escape') closeSearch();
   });
+  document.getElementById('btn-prev').addEventListener('click', () => ui.showPrev());
+  document.getElementById('btn-next').addEventListener('click', () => ui.showNext());
 }
 
 function openAddModal(cardData) {

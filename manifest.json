@@ -1,6 +1,6 @@
 {
-  "name": "la-word",
-  "short_name": "la-word",
+  "name": "La Carta",
+  "short_name": "La Carta",
   "description": "Flashcard app for learning words",
   "start_url": "/la-word/",
   "display": "standalone",
