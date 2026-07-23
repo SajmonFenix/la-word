@@ -44,3 +44,10 @@ Zabezpečiť, aby používateľ nestratil svoje karty ani pri vymazaní cache/hi
 - **Object store:** `cards`
 - **Key path:** `id`
 - **Index:** `createdAt` (pre prípadné radenie)
+
+## Neskoršie spresnenie
+
+IndexedDB a localStorage chránia pred jednotlivými zlyhaniami zápisu a
+umožňujú lokálnu obnovu. Vymazanie dát webu môže odstrániť obe úložiská.
+Externou používateľskou zálohou je exportovaný súbor `la-carta-backup.json`;
+podrobnosti definuje špecifikácia z 23. 7. 2026.
