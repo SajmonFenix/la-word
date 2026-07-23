@@ -23,7 +23,7 @@ function createStyle() {
 
 function createNode(tagName = 'div') {
   const listeners = new Map();
-  return {
+  const node = {
     tagName: tagName.toUpperCase(),
     children: [],
     dataset: {},
@@ -33,9 +33,15 @@ function createNode(tagName = 'div') {
     hidden: false,
     className: '',
     append(...children) {
+      children.forEach((child) => {
+        child.parentNode = this;
+      });
       this.children.push(...children);
     },
     replaceChildren(...children) {
+      children.forEach((child) => {
+        child.parentNode = this;
+      });
       this.children = [...children];
     },
     setAttribute(name, value) {
@@ -61,7 +67,15 @@ function createNode(tagName = 'div') {
         0
       );
     },
+    closest(selector) {
+      const className = selector.startsWith('.') ? selector.slice(1) : null;
+      if (className && this.className.split(/\s+/).includes(className)) {
+        return this;
+      }
+      return this.parentNode?.closest?.(selector) || null;
+    },
   };
+  return node;
 }
 
 export function makeCards(count) {
@@ -132,6 +146,13 @@ export function createSliderHarness(initialStorage = {}, options = {}) {
     activeFront,
     activeBack,
     activeFace: activeFront,
+    clickActiveCard() {
+      list.dispatchEvent({
+        type: 'click',
+        target: activeFront(),
+        stopPropagation() {},
+      });
+    },
     pointerDown(x, y = 0) {
       dispatchPointer('pointerdown', x, y);
     },

@@ -29,6 +29,7 @@ export function createCardSlider({
   let queuedDelta = 0;
   let queuedResolvers = [];
   let listenersBound = false;
+  let suppressClick = false;
 
   function createSlide(entry) {
     const slide = document.createElement('div');
@@ -237,6 +238,7 @@ export function createCardSlider({
       }
       if (axis === 'horizontal') {
         event.preventDefault?.();
+        if (Math.abs(dx) > AXIS_LOCK_DISTANCE) suppressClick = true;
         elements.list.classList.add('is-dragging');
         elements.list.style.setProperty('--drag-offset', `${dx}px`);
       }
@@ -262,6 +264,19 @@ export function createCardSlider({
     if (document.hidden) cancelInteraction();
   }
 
+  function handleClick(event) {
+    if (suppressClick) {
+      suppressClick = false;
+      return;
+    }
+    if (phase !== 'idle') return;
+    const slide = event.target.closest?.('.splide__slide');
+    const card = event.target.closest?.('.card');
+    if (slide?.classList.contains('is-active') && card) {
+      card.classList.toggle('flipped');
+    }
+  }
+
   function bindEvents() {
     if (listenersBound) return;
     listenersBound = true;
@@ -269,6 +284,7 @@ export function createCardSlider({
       'lostpointercapture'].forEach((type) => {
       elements.list.addEventListener(type, handlePointer);
     });
+    elements.list.addEventListener('click', handleClick);
     elements.list.addEventListener('transitionend', finishAnimation);
     document.addEventListener('visibilitychange', handleVisibilityChange);
   }
@@ -280,6 +296,7 @@ export function createCardSlider({
       'lostpointercapture'].forEach((type) => {
       elements.list.removeEventListener(type, handlePointer);
     });
+    elements.list.removeEventListener('click', handleClick);
     elements.list.removeEventListener('transitionend', finishAnimation);
     document.removeEventListener('visibilitychange', handleVisibilityChange);
   }

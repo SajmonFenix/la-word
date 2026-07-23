@@ -109,7 +109,7 @@ export async function initApp(document = globalThis.document) {
   $('btn-update-app').addEventListener('click', () => { $('update-banner').classList.add('hidden'); updates.apply(); });
   bindDismissibleSheet($('modal-overlay'), $('modal'), editor.close);
   bindDismissibleSheet($('settings-overlay'), $('settings-modal'), closeSettings);
-  document.addEventListener('cards-change', ui.refresh.bind(ui));
+  document.addEventListener('cards-change', () => ui.refresh());
 
   await cards.init();
   ui.onEditCard = editor.open;

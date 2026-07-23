@@ -167,3 +167,21 @@ test('visibility loss restores the confirmed centered state', () => {
   );
   assert.equal(slider.getCurrentCardId(), 'card-1');
 });
+
+test('active card flips on click and a navigated card starts unflipped', async () => {
+  const harness = createSliderHarness();
+  const slider = createCardSlider(harness.dependencies);
+  slider.init(makeCards(10));
+
+  harness.clickActiveCard();
+  assert.equal(
+    harness.activeFront().parentNode.classList.contains('flipped'),
+    true
+  );
+
+  await slider.next();
+  assert.equal(
+    harness.activeFront().parentNode.classList.contains('flipped'),
+    false
+  );
+});
