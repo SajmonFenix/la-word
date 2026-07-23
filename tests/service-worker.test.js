@@ -77,13 +77,13 @@ test('install precaches the shell without activating the worker', async () => {
   ]);
 });
 
-test('service worker uses the virtual-slider cache generation', () => {
+test('service worker refreshes cached assets for the flat slider transition', () => {
   const source = fs.readFileSync(
     path.join(__dirname, '..', 'service-worker.js'),
     'utf8'
   );
 
-  assert.match(source, /const CACHE = 'la-word-v7';/);
+  assert.match(source, /const CACHE = 'la-word-v8';/);
 });
 
 test('SKIP_WAITING message activates the waiting worker', () => {

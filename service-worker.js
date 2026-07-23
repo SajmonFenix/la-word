@@ -1,4 +1,4 @@
-const CACHE = 'la-word-v7';
+const CACHE = 'la-word-v8';
 const APP_SHELL = [
   './',
   './index.html',
