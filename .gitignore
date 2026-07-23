@@ -1,5 +1,6 @@
 .playwright-mcp/
 .superpowers/
+.worktrees/
 la-word-screenshot.png
 plans/
 backup/
