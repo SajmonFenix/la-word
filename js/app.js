@@ -109,11 +109,10 @@ export async function initApp(document = globalThis.document) {
   $('btn-update-app').addEventListener('click', () => { $('update-banner').classList.add('hidden'); updates.apply(); });
   bindDismissibleSheet($('modal-overlay'), $('modal'), editor.close);
   bindDismissibleSheet($('settings-overlay'), $('settings-modal'), closeSettings);
-  document.addEventListener('cards-change', () => ui.refresh());
-
   await cards.init();
   ui.onEditCard = editor.open;
   ui.init();
+  document.addEventListener('cards-change', () => ui.refresh());
   const recovery = storage.consumeRecoveryNotice();
   if (recovery) feedback.toast(recovery);
   globalThis.navigator?.serviceWorker?.register('service-worker.js');

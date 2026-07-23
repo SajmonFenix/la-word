@@ -12,6 +12,7 @@ export function createUI({
   let sliderController = slider;
   let onEditCard = null;
   let showArrows = true;
+  let initialized = false;
 
   function getSlider() {
     if (!sliderController) {
@@ -44,10 +45,12 @@ export function createUI({
       api.toggleArrows(showArrows, { persist: false });
       getSlider().setOnEditCard((card) => onEditCard?.(card));
       getSlider().init(items);
+      initialized = true;
       updateEmptyState(items);
     },
 
     refresh(options = {}) {
+      if (!initialized) return;
       const items = cardsModel.getAll();
       const preferredId = options.preferredId
         ?? getSlider().getCurrentCardId();

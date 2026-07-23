@@ -37,6 +37,15 @@ test('rendered text uses textContent and colors use normalized card data', () =>
   assert.equal(harness.activeFace().style.background, '#123456');
 });
 
+test('edit action preserves the application pencil icon', () => {
+  const harness = createSliderHarness();
+  const slider = createCardSlider(harness.dependencies);
+
+  slider.init(makeCards(1));
+
+  assert.match(harness.activeBack().children[1].innerHTML, /<svg/);
+});
+
 test('zero to four cards never create duplicate interactive slides', () => {
   for (let count = 0; count <= 4; count += 1) {
     const harness = createSliderHarness();

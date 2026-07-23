@@ -117,3 +117,18 @@ test('empty state and arrow preference remain managed by the facade', () => {
   assert.equal(document.nodes['card-area'].classList.contains('hidden'), true);
   assert.deepEqual(saved, [['laword_show_arrows', true]]);
 });
+
+test('refresh before initialization cannot overwrite restored slider state', () => {
+  const calls = [];
+  const document = createDocument();
+  const ui = createUI({
+    cardsModel: { getAll: () => [{ id: 'card-1' }, { id: 'card-92' }] },
+    slider: createSliderSpy(calls, null),
+    localStorage: { getItem: () => null, setItem() {} },
+    document,
+  });
+
+  ui.refresh();
+
+  assert.deepEqual(calls, []);
+});

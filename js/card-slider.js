@@ -9,6 +9,8 @@ export const SWIPE_DISTANCE = 70;
 export const SWIPE_VELOCITY = 0.45;
 export const AXIS_LOCK_DISTANCE = 8;
 
+const PENCIL_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.83 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg>';
+
 export function createCardSlider({
   elements,
   storage = globalThis.localStorage,
@@ -51,7 +53,7 @@ export function createCardSlider({
     edit.className = 'btn-edit';
     edit.type = 'button';
     edit.title = 'Upraviť';
-    edit.textContent = '✎';
+    edit.innerHTML = PENCIL_SVG;
     edit.setAttribute('aria-label', 'Upraviť kartu');
 
     frontText.textContent = entry.card.front;
