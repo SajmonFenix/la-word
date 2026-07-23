@@ -12,10 +12,11 @@ function loadServiceWorker() {
   const source = fs.readFileSync(path.join(__dirname, '..', 'service-worker.js'), 'utf8');
   const listeners = {};
   let skipWaitingCount = 0;
+  let cachedShell = null;
   const context = {
     URL,
     caches: {
-      open: async () => ({ addAll: async () => {} }),
+      open: async () => ({ addAll: async (items) => { cachedShell = [...items]; } }),
       keys: async () => [],
       delete: async () => true,
       match: async () => null,
@@ -40,17 +41,38 @@ function loadServiceWorker() {
   return {
     listeners,
     skipWaitingCalls: () => skipWaitingCount,
+    cachedShell: () => cachedShell,
   };
 }
 
 test('install precaches the shell without activating the worker', async () => {
-  const { listeners, skipWaitingCalls } = loadServiceWorker();
+  const { listeners, skipWaitingCalls, cachedShell } = loadServiceWorker();
   const pending = [];
 
   listeners.install({ waitUntil: (promise) => pending.push(promise) });
   await Promise.all(pending);
 
   assert.equal(skipWaitingCalls(), 0);
+  assert.deepEqual(cachedShell(), [
+    './',
+    './index.html',
+    './css/style.css',
+    './js/storage.js',
+    './js/cards.js',
+    './js/ui.js',
+    './js/feedback.js',
+    './js/sheet.js',
+    './js/pwa-updates.js',
+    './js/search.js',
+    './js/translation.js',
+    './js/settings.js',
+    './js/backup.js',
+    './js/card-editor.js',
+    './js/app.js',
+    './manifest.json',
+    './icons/icon-192.png',
+    './icons/icon-512.png',
+  ]);
 });
 
 test('SKIP_WAITING message activates the waiting worker', () => {

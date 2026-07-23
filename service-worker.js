@@ -1,4 +1,4 @@
-const CACHE = 'la-word-v5';
+const CACHE = 'la-word-v6';
 const APP_SHELL = [
   './',
   './index.html',
@@ -6,6 +6,14 @@ const APP_SHELL = [
   './js/storage.js',
   './js/cards.js',
   './js/ui.js',
+  './js/feedback.js',
+  './js/sheet.js',
+  './js/pwa-updates.js',
+  './js/search.js',
+  './js/translation.js',
+  './js/settings.js',
+  './js/backup.js',
+  './js/card-editor.js',
   './js/app.js',
   './manifest.json',
   './icons/icon-192.png',
