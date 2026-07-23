@@ -8,6 +8,10 @@ const DB_VERSION = 1;
 const DEFAULT_CARD_COLOR = '#4A90D9';
 const SUPPORTED_TRANSLATION_LANGUAGES = ['sk', 'en', 'de', 'es', 'it'];
 const DEFAULT_TRANSLATION_SETTINGS = { source: 'sk', target: 'en' };
+const BACKUP_FORMAT = 'la-carta-backup';
+const BACKUP_VERSION = 1;
+const FONT_SIZE_MIN = 70;
+const FONT_SIZE_MAX = 150;
 
 function openDB() {
   return new Promise((resolve, reject) => {
@@ -122,14 +126,40 @@ const storage = {
     }
   },
 
-  exportData() {
-    try {
-      const data = localStorage.getItem(STORAGE_KEY);
-      return data || '[]';
-    } catch {
-      return '[]';
-    }
+  exportData(cards, settings, now = new Date()) {
+    const payload = {
+      format: BACKUP_FORMAT,
+      version: BACKUP_VERSION,
+      exportedAt: now.toISOString(),
+      cards: this._normalizeCards(cards),
+      settings: this._normalizeBackupSettings(settings)
+    };
+    return JSON.stringify(payload, null, 2);
   },
+
+   parseImportData(jsonString) {
+     const value = JSON.parse(jsonString);
+     if (Array.isArray(value)) {
+       return {
+         cards: this._normalizeCards(value),
+         settings: null,
+         legacy: true
+       };
+     }
+     if (!value || value.format !== BACKUP_FORMAT) {
+       throw new Error('Invalid backup format');
+     }
+     if (value.version !== BACKUP_VERSION) {
+       throw new Error('Unsupported backup version');
+     }
+     return {
+       cards: this._normalizeCards(value.cards),
+       settings: value.settings === undefined
+         ? null
+         : this._normalizeBackupSettings(value.settings),
+       legacy: false
+     };
+   },
 
    async importData(jsonString) {
      const cards = this._normalizeCards(JSON.parse(jsonString));
@@ -165,6 +195,47 @@ const storage = {
          createdAt
        };
      });
+   },
+
+   _normalizeBackupSettings(settings) {
+     if (!settings || typeof settings !== 'object') {
+       throw new Error('Invalid backup settings');
+     }
+     const translation = this._normalizeTranslationSettingsStrict(settings.translation);
+     const fontSizes = this._normalizeFontSizesStrict(settings.fontSizes);
+     if (typeof settings.showArrows !== 'boolean') {
+       throw new Error('Invalid backup settings');
+     }
+     return { translation, fontSizes, showArrows: settings.showArrows };
+   },
+
+   _normalizeTranslationSettingsStrict(settings) {
+     const source = settings?.source;
+     const target = settings?.target;
+     if (
+       !SUPPORTED_TRANSLATION_LANGUAGES.includes(source) ||
+       !SUPPORTED_TRANSLATION_LANGUAGES.includes(target) ||
+       source === target
+     ) {
+       throw new Error('Invalid backup settings');
+     }
+     return { source, target };
+   },
+
+   _normalizeFontSizesStrict(fontSizes) {
+     const front = fontSizes?.front;
+     const back = fontSizes?.back;
+     if (
+       !Number.isInteger(front) ||
+       !Number.isInteger(back) ||
+       front < FONT_SIZE_MIN ||
+       front > FONT_SIZE_MAX ||
+       back < FONT_SIZE_MIN ||
+       back > FONT_SIZE_MAX
+     ) {
+       throw new Error('Invalid backup settings');
+     }
+     return { front, back };
    },
 
    async _readAllFromIndexedDB() {

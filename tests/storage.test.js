@@ -231,6 +231,92 @@ test('throws when neither storage backend accepts the cards', async () => {
   );
 });
 
+test('exports cards and settings as a versioned backup', () => {
+  const storage = loadStorage();
+  const json = storage.exportData(
+    [{ id: 'a', front: 'dom', back: 'house', hint: '', color: '#123456', createdAt: 1 }],
+    {
+      translation: { source: 'sk', target: 'en' },
+      fontSizes: { front: 110, back: 90 },
+      showArrows: false,
+    },
+    new Date('2026-07-23T12:00:00.000Z')
+  );
+
+  assert.equal(JSON.stringify(JSON.parse(json)), JSON.stringify({
+    format: 'la-carta-backup',
+    version: 1,
+    exportedAt: '2026-07-23T12:00:00.000Z',
+    cards: [{ id: 'a', front: 'dom', hint: '', back: 'house', color: '#123456', createdAt: 1 }],
+    settings: {
+      translation: { source: 'sk', target: 'en' },
+      fontSizes: { front: 110, back: 90 },
+      showArrows: false,
+    },
+  }));
+});
+
+test('parses a version 1 backup with normalized cards and settings', () => {
+  const storage = loadStorage();
+  const parsed = storage.parseImportData(JSON.stringify({
+    format: 'la-carta-backup',
+    version: 1,
+    exportedAt: '2026-07-23T12:00:00.000Z',
+    cards: [{ front: ' dom ', back: ' house ' }],
+    settings: {
+      translation: { source: 'de', target: 'it' },
+      fontSizes: { front: 120, back: 80 },
+      showArrows: false,
+    },
+  }));
+
+  assert.equal(parsed.legacy, false);
+  assert.equal(parsed.cards[0].front, 'dom');
+  assert.equal(JSON.stringify(parsed.settings.fontSizes), JSON.stringify({ front: 120, back: 80 }));
+});
+
+test('parses a legacy card array without changing settings', () => {
+  const storage = loadStorage();
+  const parsed = storage.parseImportData(JSON.stringify([{ front: 'dom', back: 'house' }]));
+
+  assert.equal(parsed.legacy, true);
+  assert.equal(parsed.settings, null);
+  assert.equal(parsed.cards[0].front, 'dom');
+});
+
+test('allows a version 1 backup to omit settings', () => {
+  const storage = loadStorage();
+  const parsed = storage.parseImportData(JSON.stringify({
+    format: 'la-carta-backup',
+    version: 1,
+    cards: [{ front: 'dom', back: 'house' }],
+  }));
+
+  assert.equal(parsed.legacy, false);
+  assert.equal(parsed.settings, null);
+});
+
+test('rejects unsupported versions and invalid present settings', () => {
+  const storage = loadStorage();
+  assert.throws(
+    () => storage.parseImportData('{"format":"la-carta-backup","version":2,"cards":[]}'),
+    /Unsupported backup version/
+  );
+  assert.throws(
+    () => storage.parseImportData(JSON.stringify({
+      format: 'la-carta-backup',
+      version: 1,
+      cards: [],
+      settings: {
+        translation: { source: 'sk', target: 'sk' },
+        fontSizes: { front: 100, back: 100 },
+        showArrows: true,
+      },
+    })),
+    /Invalid backup settings/
+  );
+});
+
 test('normalizes valid imported cards and rejects malformed entries', () => {
   const storage = loadStorage();
   assert.equal(typeof storage._normalizeCards, 'function');
