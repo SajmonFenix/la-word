@@ -120,6 +120,14 @@ const ui = {
     this._applyArrowsVisibility();
   },
 
+  getShowArrows() {
+    return this._showArrows;
+  },
+
+  setShowArrows(show) {
+    this.toggleArrows(show);
+  },
+
   search(query) {
     const all = cards.getAll();
     const q = query.toLowerCase().trim();

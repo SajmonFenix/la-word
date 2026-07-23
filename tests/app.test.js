@@ -3,7 +3,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 const vm = require('node:vm');
 
-function loadApp() {
+function loadApp(extraContext = {}) {
   const source = fs.readFileSync(path.join(__dirname, '..', 'js', 'app.js'), 'utf8');
   const context = {
     console,
@@ -11,6 +11,7 @@ function loadApp() {
       addEventListener: () => {},
     },
     setTimeout: () => {},
+    ...extraContext,
   };
 
   vm.createContext(context);
@@ -21,7 +22,10 @@ function loadApp() {
     getImportConfirmCopy,
     getDeleteConfirmCopy,
     isServiceWorkerUpdateMessage,
-    runCardMutation
+    runCardMutation,
+    getBackupSettings,
+    getImportErrorMessage,
+    applyBackupSettings
   };`, context);
   return context.__app;
 }
@@ -111,4 +115,62 @@ test('card mutation helper waits for persistence and reports a failure', async (
   assert.equal(finished, true);
   assert.equal(result.ok, false);
   assert.deepEqual(messages, ['Kartu sa nepodarilo uložiť.']);
+});
+
+test('collects all exportable settings', () => {
+  const app = loadApp({
+    storage: {
+      loadTranslationSettings: () => ({ source: 'sk', target: 'en' }),
+      loadFontSizes: () => ({ front: 110, back: 90 }),
+    },
+    ui: { getShowArrows: () => false },
+  });
+
+  assert.equal(JSON.stringify(app.getBackupSettings()), JSON.stringify({
+    translation: { source: 'sk', target: 'en' },
+    fontSizes: { front: 110, back: 90 },
+    showArrows: false,
+  }));
+});
+
+test('maps import errors to specific Slovak messages', () => {
+  const app = loadApp();
+
+  assert.equal(
+    app.getImportErrorMessage(new Error('Unsupported backup version')),
+    'Táto verzia zálohy nie je podporovaná.'
+  );
+  assert.equal(
+    app.getImportErrorMessage(new Error('Invalid backup format')),
+    'Vybraný súbor nie je platná záloha.'
+  );
+  assert.equal(
+    app.getImportErrorMessage(new Error('Cards could not be persisted')),
+    'Import sa nepodarilo uložiť.'
+  );
+});
+
+test('applies all imported settings through their public APIs', () => {
+  const calls = [];
+  const app = loadApp({
+    storage: {
+      saveTranslationSettings: (source, target) => calls.push(['translation', source, target]),
+      saveFontSizes: (front, back) => calls.push(['font', front, back]),
+    },
+    ui: {
+      setShowArrows: (show) => calls.push(['arrows', show]),
+    },
+  });
+
+  app.applyBackupSettings({
+    translation: { source: 'de', target: 'it' },
+    fontSizes: { front: 120, back: 80 },
+    showArrows: false,
+  });
+
+  assert.equal(JSON.stringify(calls), JSON.stringify([
+    ['translation', 'de', 'it'],
+    ['font', 120, 80],
+    ['arrows', false],
+  ]));
 });

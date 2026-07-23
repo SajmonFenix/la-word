@@ -161,10 +161,11 @@ const storage = {
      };
    },
 
-   async importData(jsonString) {
-     const cards = this._normalizeCards(JSON.parse(jsonString));
-     await this.save(cards);
-     return cards;
+   async importData(jsonString, applySettings = () => {}) {
+     const parsed = this.parseImportData(jsonString);
+     await this.save(parsed.cards);
+     if (parsed.settings) applySettings(parsed.settings);
+     return parsed;
    },
 
    _normalizeCards(value) {

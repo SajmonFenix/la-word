@@ -317,6 +317,49 @@ test('rejects unsupported versions and invalid present settings', () => {
   );
 });
 
+test('applies imported settings only after cards persist', async () => {
+  const versionOneJson = JSON.stringify({
+    format: 'la-carta-backup',
+    version: 1,
+    cards: [{ id: 'a', front: 'dom', back: 'house', hint: '', color: '#123456', createdAt: 1 }],
+    settings: {
+      translation: { source: 'sk', target: 'en' },
+      fontSizes: { front: 110, back: 90 },
+      showArrows: false,
+    },
+  });
+  const applied = [];
+  const storage = loadStorage();
+  storage.save = async () => ({ indexedDB: true, localStorage: true, persisted: true });
+
+  const result = await storage.importData(versionOneJson, (settings) => applied.push(settings));
+
+  assert.equal(result.cards.length, 1);
+  assert.equal(applied.length, 1);
+});
+
+test('does not apply imported settings when all card writes fail', async () => {
+  const versionOneJson = JSON.stringify({
+    format: 'la-carta-backup',
+    version: 1,
+    cards: [{ id: 'a', front: 'dom', back: 'house', hint: '', color: '#123456', createdAt: 1 }],
+    settings: {
+      translation: { source: 'sk', target: 'en' },
+      fontSizes: { front: 110, back: 90 },
+      showArrows: false,
+    },
+  });
+  const applied = [];
+  const storage = loadStorage();
+  storage.save = async () => { throw new Error('Cards could not be persisted'); };
+
+  await assert.rejects(
+    storage.importData(versionOneJson, (settings) => applied.push(settings)),
+    /Cards could not be persisted/
+  );
+  assert.equal(applied.length, 0);
+});
+
 test('normalizes valid imported cards and rejects malformed entries', () => {
   const storage = loadStorage();
   assert.equal(typeof storage._normalizeCards, 'function');

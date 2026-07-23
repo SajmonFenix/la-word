@@ -266,13 +266,40 @@ function closeSettings() {
   showSettingsView('menu');
 }
 
+function getBackupSettings() {
+  return {
+    translation: storage.loadTranslationSettings(),
+    fontSizes: storage.loadFontSizes(),
+    showArrows: ui.getShowArrows()
+  };
+}
+
+function getImportErrorMessage(error) {
+  if (error?.message === 'Unsupported backup version') {
+    return 'Táto verzia zálohy nie je podporovaná.';
+  }
+  if (error?.message === 'Cards could not be persisted') {
+    return 'Import sa nepodarilo uložiť.';
+  }
+  return 'Vybraný súbor nie je platná záloha.';
+}
+
+function applyBackupSettings(settings) {
+  storage.saveTranslationSettings(
+    settings.translation.source,
+    settings.translation.target
+  );
+  storage.saveFontSizes(settings.fontSizes.front, settings.fontSizes.back);
+  ui.setShowArrows(settings.showArrows);
+}
+
 function handleExport() {
-  const json = storage.exportData();
+  const json = storage.exportData(cards.getAll(), getBackupSettings());
   const blob = new Blob([json], { type: 'application/json' });
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;
-  a.download = 'la-word-backup.json';
+  a.download = 'la-carta-backup.json';
   a.click();
   URL.revokeObjectURL(url);
 }
@@ -284,17 +311,19 @@ async function handleImport() {
   input.onchange = async () => {
     const file = input.files[0];
     if (!file) return;
-    const confirmed = await showConfirm(getImportConfirmCopy());
-    if (!confirmed) return;
     try {
       const text = await file.text();
-      await storage.importData(text);
+      storage.parseImportData(text);
+      const confirmed = await showConfirm(getImportConfirmCopy());
+      if (!confirmed) return;
+      const imported = await storage.importData(text, applyBackupSettings);
       await cards.init();
-      ui.init();
+      loadFontSizes();
+      loadTranslationSettings();
       closeSettings();
-      showToast('Karty boli úspešne importované.');
-    } catch {
-      showToast('Chyba: neplatný súbor.');
+      showToast(`Importovaných kariet: ${imported.cards.length}.`);
+    } catch (error) {
+      showToast(getImportErrorMessage(error));
     }
   };
   input.click();
