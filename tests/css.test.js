@@ -42,3 +42,15 @@ test('slider supports reduced motion', () => {
     /@media\s*\(prefers-reduced-motion:\s*reduce\)[\s\S]*\.splide__list/
   );
 });
+
+test('card navigation keeps every slide at a constant scale and opacity', () => {
+  const cardRule = getRule('.splide__slide .card');
+  const neighborRule = [
+    getRule('.splide__slide.is-prev .card'),
+    getRule('.splide__slide.is-next .card'),
+  ].join('\n');
+
+  assert.doesNotMatch(cardRule, /transition:[^;]*(?:transform|opacity)/);
+  assert.doesNotMatch(neighborRule, /scale\s*\(/);
+  assert.doesNotMatch(neighborRule, /opacity\s*:/);
+});

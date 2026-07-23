@@ -325,7 +325,6 @@ body {
   min-height: 300px;
   cursor: pointer;
   position: relative;
-  transition: transform 0.35s ease, opacity 0.35s ease;
   transform-style: preserve-3d;
 }
 
@@ -333,28 +332,12 @@ body {
   pointer-events: auto;
 }
 
-.splide__slide.is-prev .card,
-.splide__slide.is-next .card {
-  transform: scale(0.85);
-  opacity: 0.7;
-}
-
-.splide__slide.is-active .card {
-  transform: none;
-  opacity: 1;
-}
-
 .splide__slide .card.flipped {
   transform: rotateY(180deg);
 }
 
-.splide__slide.is-active .card.flipped {
-  transform: rotateY(180deg);
-}
-
 @media (prefers-reduced-motion: reduce) {
-  .splide__list,
-  .splide__slide .card {
+  .splide__list {
     transition-duration: 0.01ms !important;
   }
 }
