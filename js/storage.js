@@ -10,8 +10,8 @@ const SUPPORTED_TRANSLATION_LANGUAGES = ['sk', 'en', 'de', 'es', 'it'];
 const DEFAULT_TRANSLATION_SETTINGS = { source: 'sk', target: 'en' };
 const BACKUP_FORMAT = 'la-carta-backup';
 const BACKUP_VERSION = 1;
-const FONT_SIZE_MIN = 70;
-const FONT_SIZE_MAX = 150;
+const BACKUP_FONT_SIZE_MIN = 70;
+const BACKUP_FONT_SIZE_MAX = 150;
 
 function openDB() {
   return new Promise((resolve, reject) => {
@@ -229,10 +229,10 @@ const storage = {
      if (
        !Number.isInteger(front) ||
        !Number.isInteger(back) ||
-       front < FONT_SIZE_MIN ||
-       front > FONT_SIZE_MAX ||
-       back < FONT_SIZE_MIN ||
-       back > FONT_SIZE_MAX
+       front < BACKUP_FONT_SIZE_MIN ||
+       front > BACKUP_FONT_SIZE_MAX ||
+       back < BACKUP_FONT_SIZE_MIN ||
+       back > BACKUP_FONT_SIZE_MAX
      ) {
        throw new Error('Invalid backup settings');
      }

@@ -14,7 +14,7 @@ let _searchActive = false;
 let fontSizes = { front: 100, back: 100 };
 let translationSettings = { source: 'sk', target: 'en' };
 let pendingConfirmResolve = null;
-let waitingServiceWorker = null;
+let serviceWorkerUpdateController = null;
 
 // Font size constraints
 const FONT_SIZE_MIN = 70;
@@ -468,8 +468,36 @@ function showStorageRecoveryNotice(notify = showToast) {
    if (message) notify(message);
 }
 
+function createServiceWorkerUpdateController(serviceWorker, reload, onUpdate) {
+   let waitingWorker = null;
+   let refreshing = false;
+
+   return {
+      setWaiting(worker) {
+         waitingWorker = worker;
+         if (worker) onUpdate();
+      },
+      apply() {
+         if (waitingWorker) {
+            waitingWorker.postMessage({ type: 'SKIP_WAITING' });
+         }
+      },
+      controllerChanged() {
+         if (refreshing) return;
+         refreshing = true;
+         reload();
+      }
+   };
+}
+
 function initServiceWorkerUpdates() {
    if (!('serviceWorker' in navigator)) return;
+
+   serviceWorkerUpdateController = createServiceWorkerUpdateController(
+      navigator.serviceWorker,
+      () => window.location.reload(),
+      showUpdateBanner
+   );
 
    navigator.serviceWorker.addEventListener('message', (event) => {
       if (isServiceWorkerUpdateMessage(event.data)) {
@@ -479,8 +507,7 @@ function initServiceWorkerUpdates() {
 
    navigator.serviceWorker.ready.then((registration) => {
       if (registration.waiting) {
-         waitingServiceWorker = registration.waiting;
-         showUpdateBanner();
+         serviceWorkerUpdateController.setWaiting(registration.waiting);
       }
 
       registration.addEventListener('updatefound', () => {
@@ -488,18 +515,14 @@ function initServiceWorkerUpdates() {
          if (!worker) return;
          worker.addEventListener('statechange', () => {
             if (worker.state === 'installed' && navigator.serviceWorker.controller) {
-               waitingServiceWorker = worker;
-               showUpdateBanner();
+               serviceWorkerUpdateController.setWaiting(worker);
             }
          });
       });
    });
 
-   let refreshing = false;
    navigator.serviceWorker.addEventListener('controllerchange', () => {
-      if (refreshing) return;
-      refreshing = true;
-      window.location.reload();
+      serviceWorkerUpdateController.controllerChanged();
    });
 }
 
@@ -509,11 +532,7 @@ function showUpdateBanner() {
 
 function applyAppUpdate() {
    document.getElementById('update-banner').classList.add('hidden');
-   if (waitingServiceWorker) {
-      waitingServiceWorker.postMessage({ type: 'SKIP_WAITING' });
-      return;
-   }
-   window.location.reload();
+   serviceWorkerUpdateController?.apply();
 }
 
 function shouldStartSheetDrag(target) {

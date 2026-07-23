@@ -1,4 +1,4 @@
-const CACHE = 'la-word-v3';
+const CACHE = 'la-word-v5';
 const APP_SHELL = [
   './',
   './index.html',
@@ -16,7 +16,6 @@ self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(CACHE).then((cache) => cache.addAll(APP_SHELL))
   );
-  self.skipWaiting();
 });
 
 self.addEventListener('activate', (event) => {

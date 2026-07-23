@@ -26,7 +26,8 @@ function loadApp(extraContext = {}) {
     getBackupSettings,
     getImportErrorMessage,
     applyBackupSettings,
-    showStorageRecoveryNotice
+    showStorageRecoveryNotice,
+    createServiceWorkerUpdateController
   };`, context);
   return context.__app;
 }
@@ -187,4 +188,47 @@ test('shows a one-shot recovery notice after cards initialize', () => {
   app.showStorageRecoveryNotice((message) => shown.push(message));
 
   assert.deepEqual(shown, ['Karty boli obnovené zo zálohy.']);
+});
+
+test('controlled update waits for a click and reloads only once after controller change', () => {
+  const messages = [];
+  let updates = 0;
+  let reloads = 0;
+  const worker = {
+    postMessage: (message) => messages.push(message),
+  };
+  const app = loadApp();
+  const controller = app.createServiceWorkerUpdateController(
+    {},
+    () => { reloads += 1; },
+    () => { updates += 1; }
+  );
+
+  controller.setWaiting(worker);
+  assert.equal(updates, 1);
+  assert.equal(messages.length, 0);
+  assert.equal(reloads, 0);
+
+  controller.apply();
+  assert.equal(JSON.stringify(messages), JSON.stringify([{ type: 'SKIP_WAITING' }]));
+  assert.equal(reloads, 0);
+
+  controller.controllerChanged();
+  controller.controllerChanged();
+  assert.equal(reloads, 1);
+});
+
+test('storage and app scripts can load together in the browser global scope', () => {
+  const storageSource = fs.readFileSync(path.join(__dirname, '..', 'js', 'storage.js'), 'utf8');
+  const appSource = fs.readFileSync(path.join(__dirname, '..', 'js', 'app.js'), 'utf8');
+  const context = {
+    console,
+    document: { addEventListener: () => {} },
+    setTimeout: () => {},
+  };
+  vm.createContext(context);
+
+  assert.doesNotThrow(() => {
+    vm.runInContext(`${storageSource}\n${appSource}`, context);
+  });
 });
