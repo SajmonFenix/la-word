@@ -41,6 +41,19 @@ test('small collections create no duplicate slots', () => {
   assert.deepEqual(buildSliderWindow([], 0), []);
 });
 
+test('three to five cards keep unique wrapped neighbors around the active card', () => {
+  assert.deepEqual(
+    buildSliderWindow(cards.slice(0, 3), 0)
+      .map(({ offset, index }) => [offset, index]),
+    [[-1, 2], [0, 0], [1, 1]]
+  );
+  assert.deepEqual(
+    buildSliderWindow(cards.slice(0, 5), 4)
+      .map(({ offset, index }) => [offset, index]),
+    [[-2, 2], [-1, 3], [0, 4], [1, 0], [2, 1]]
+  );
+});
+
 test('reconciliation prefers id and falls back to a valid nearby index', () => {
   assert.equal(reconcileCurrentIndex(cards, 'card-900', 2), 899);
   assert.equal(reconcileCurrentIndex(cards.slice(0, 4), 'missing', 7), 3);

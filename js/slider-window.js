@@ -15,11 +15,15 @@ export function reconcileCurrentIndex(cards, preferredId, fallbackIndex = 0) {
 export function buildSliderWindow(cards, currentIndex) {
   if (cards.length === 0) return [];
   if (cards.length <= SLOT_RADIUS * 2 + 1) {
-    return cards.map((card, index) => ({
-      offset: index - currentIndex,
-      index,
-      card,
-    }));
+    const slotsBefore = Math.min(
+      SLOT_RADIUS,
+      Math.floor((cards.length - 1) / 2)
+    );
+    return Array.from({ length: cards.length }, (_, slot) => {
+      const offset = slot - slotsBefore;
+      const index = wrapIndex(currentIndex + offset, cards.length);
+      return { offset, index, card: cards[index] };
+    });
   }
   return Array.from({ length: SLOT_RADIUS * 2 + 1 }, (_, slot) => {
     const offset = slot - SLOT_RADIUS;
