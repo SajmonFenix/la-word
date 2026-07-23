@@ -99,3 +99,71 @@ test('an empty collection clears the saved id', () => {
   assert.equal(harness.storage.getItem('laword_last_card_id'), null);
   assert.equal(harness.counter.textContent, '0 / 0');
 });
+
+test('69 pixels returns to the confirmed card and 70 pixels advances', async () => {
+  const harness = createSliderHarness({}, { reducedMotion: false });
+  const slider = createCardSlider(harness.dependencies);
+  slider.init(makeCards(10));
+
+  harness.swipe({ from: 100, to: 31, duration: 400 });
+  await harness.finishAnimation();
+  assert.equal(slider.getCurrentCardId(), 'card-1');
+
+  harness.swipe({ from: 100, to: 30, duration: 400 });
+  await harness.finishAnimation();
+  assert.equal(slider.getCurrentCardId(), 'card-2');
+});
+
+test('fast short flick advances by velocity', async () => {
+  const harness = createSliderHarness({}, { reducedMotion: false });
+  const slider = createCardSlider(harness.dependencies);
+  slider.init(makeCards(10));
+
+  harness.swipe({ from: 100, to: 60, duration: 50 });
+  await harness.finishAnimation();
+
+  assert.equal(slider.getCurrentCardId(), 'card-2');
+});
+
+test('vertical intent and pointercancel never change the confirmed index', async () => {
+  const harness = createSliderHarness({}, { reducedMotion: false });
+  const slider = createCardSlider(harness.dependencies);
+  slider.init(makeCards(10));
+
+  harness.diagonalSwipe({ dx: 20, dy: 80 });
+  harness.cancelPointer();
+  await harness.finishAnimation();
+
+  assert.equal(slider.getCurrentCardId(), 'card-1');
+  assert.equal(harness.storage.getItem('laword_last_card_id'), null);
+});
+
+test('rapid gestures keep at most one queued move', async () => {
+  const harness = createSliderHarness({}, { reducedMotion: false });
+  const slider = createCardSlider(harness.dependencies);
+  slider.init(makeCards(20));
+
+  const first = slider.next();
+  const second = slider.next();
+  const third = slider.next();
+  await harness.finishAllAnimations();
+  await Promise.all([first, second, third]);
+
+  assert.equal(slider.getCurrentCardId(), 'card-3');
+});
+
+test('visibility loss restores the confirmed centered state', () => {
+  const harness = createSliderHarness();
+  const slider = createCardSlider(harness.dependencies);
+  slider.init(makeCards(10));
+  harness.pointerDown(100);
+  harness.pointerMove(20);
+
+  harness.hideDocument();
+
+  assert.equal(
+    harness.list.style.getPropertyValue('--drag-offset'),
+    '0px'
+  );
+  assert.equal(slider.getCurrentCardId(), 'card-1');
+});

@@ -53,6 +53,8 @@ function createNode(tagName = 'div') {
       event.currentTarget = this;
       listeners.get(event.type)?.forEach((listener) => listener(event));
     },
+    setPointerCapture() {},
+    releasePointerCapture() {},
     listenerCount() {
       return [...listeners.values()].reduce(
         (sum, group) => sum + group.size,
@@ -73,16 +75,22 @@ export function makeCards(count) {
   }));
 }
 
-export function createSliderHarness(initialStorage = {}) {
+export function createSliderHarness(initialStorage = {}, options = {}) {
   const values = new Map(Object.entries(initialStorage));
   const container = createNode();
   const list = createNode();
   const counter = createNode();
   const previousButton = createNode('button');
   const nextButton = createNode('button');
+  const documentNode = createNode('document');
   const document = {
     createElement: (tagName) => createNode(tagName),
+    addEventListener: documentNode.addEventListener,
+    removeEventListener: documentNode.removeEventListener,
+    dispatchEvent: documentNode.dispatchEvent,
+    hidden: false,
   };
+  let currentTime = 0;
   const storage = {
     getItem: (key) => values.get(key) ?? null,
     setItem: (key, value) => values.set(key, String(value)),
@@ -94,14 +102,28 @@ export function createSliderHarness(initialStorage = {}) {
   const activeCard = () => activeSlide()?.children[0];
   const activeFront = () => activeCard()?.children[0];
   const activeBack = () => activeCard()?.children[1];
+  const pointerTarget = {
+    closest: (selector) => selector === 'button' ? null : activeCard(),
+  };
+  const dispatchPointer = (type, x, y = 0) => {
+    list.dispatchEvent({
+      type,
+      pointerId: 1,
+      clientX: x,
+      clientY: y,
+      target: pointerTarget,
+      preventDefault() {},
+    });
+  };
 
-  return {
+  const harness = {
     dependencies: {
       elements: { container, list, counter, previousButton, nextButton },
       storage,
       document,
       requestFrame: (callback) => callback(),
-      now: () => 0,
+      now: () => currentTime,
+      reducedMotion: { matches: options.reducedMotion ?? true },
     },
     storage,
     list,
@@ -110,5 +132,48 @@ export function createSliderHarness(initialStorage = {}) {
     activeFront,
     activeBack,
     activeFace: activeFront,
+    pointerDown(x, y = 0) {
+      dispatchPointer('pointerdown', x, y);
+    },
+    pointerMove(x, y = 0) {
+      dispatchPointer('pointermove', x, y);
+    },
+    pointerUp(x, y = 0) {
+      dispatchPointer('pointerup', x, y);
+    },
+    cancelPointer() {
+      dispatchPointer('pointercancel', 0, 0);
+    },
+    swipe({ from, to, duration }) {
+      currentTime = 0;
+      dispatchPointer('pointerdown', from, 0);
+      currentTime = duration;
+      dispatchPointer('pointermove', to, 0);
+      dispatchPointer('pointerup', to, 0);
+    },
+    diagonalSwipe({ dx, dy }) {
+      currentTime = 0;
+      dispatchPointer('pointerdown', 100, 0);
+      currentTime = 100;
+      dispatchPointer('pointermove', 100 + dx, dy);
+      dispatchPointer('pointerup', 100 + dx, dy);
+    },
+    hideDocument() {
+      document.hidden = true;
+      document.dispatchEvent({ type: 'visibilitychange', target: document });
+    },
+    finishAnimation() {
+      list.dispatchEvent({ type: 'transitionend', target: list });
+      return Promise.resolve();
+    },
+    async finishAllAnimations() {
+      for (let index = 0; index < 3; index += 1) {
+        await harness.finishAnimation();
+      }
+    },
+    listenerCount() {
+      return list.listenerCount() + documentNode.listenerCount();
+    },
   };
+  return harness;
 }

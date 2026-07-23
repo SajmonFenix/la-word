@@ -13,10 +13,22 @@ export function createCardSlider({
   elements,
   storage = globalThis.localStorage,
   document = globalThis.document,
+  requestFrame = globalThis.requestAnimationFrame?.bind(globalThis)
+    ?? ((callback) => callback()),
+  now = () => globalThis.performance.now(),
+  reducedMotion = globalThis.matchMedia?.('(prefers-reduced-motion: reduce)'),
 } = {}) {
   let items = [];
   let currentIndex = -1;
   let onEditCard = null;
+  let phase = 'idle';
+  let drag = null;
+  let axis = null;
+  let animationDelta = 0;
+  let animationResolve = null;
+  let queuedDelta = 0;
+  let queuedResolvers = [];
+  let listenersBound = false;
 
   function createSlide(entry) {
     const slide = document.createElement('div');
@@ -81,6 +93,7 @@ export function createCardSlider({
       0
     );
     renderWindow();
+    bindEvents();
   }
 
   function persistCurrentCard() {
@@ -116,10 +129,164 @@ export function createCardSlider({
     persistCurrentCard();
   }
 
+  function resetVisualPosition() {
+    elements.list.style.setProperty('--drag-offset', '0px');
+    elements.list.style.setProperty('--transition-offset', '0px');
+    elements.list.classList.remove('is-dragging', 'is-animating');
+  }
+
+  function finishAnimation() {
+    if (phase !== 'animating') return;
+    const delta = animationDelta;
+    const resolve = animationResolve;
+    animationDelta = 0;
+    animationResolve = null;
+    if (delta) commitIndex(currentIndex + delta);
+    resetVisualPosition();
+    phase = 'idle';
+    resolve?.(Boolean(delta));
+
+    if (queuedDelta) {
+      const nextDelta = queuedDelta;
+      const resolvers = queuedResolvers;
+      queuedDelta = 0;
+      queuedResolvers = [];
+      animateBy(nextDelta).then((result) => {
+        resolvers.forEach((queuedResolve) => queuedResolve(result));
+      });
+    }
+  }
+
+  function animateBy(delta) {
+    if (items.length <= 1) return Promise.resolve(false);
+    if (phase === 'animating') {
+      queuedDelta = delta;
+      return new Promise((resolve) => queuedResolvers.push(resolve));
+    }
+
+    phase = 'animating';
+    animationDelta = delta;
+    elements.list.classList.remove('is-dragging');
+    elements.list.classList.add('is-animating');
+    elements.list.style.setProperty(
+      '--transition-offset',
+      delta > 0 ? 'calc(0px - var(--slide-step))' : 'var(--slide-step)'
+    );
+
+    const promise = new Promise((resolve) => {
+      animationResolve = resolve;
+    });
+    if (reducedMotion?.matches) requestFrame(finishAnimation);
+    return promise;
+  }
+
+  function animateBack() {
+    phase = 'animating';
+    animationDelta = 0;
+    elements.list.classList.remove('is-dragging');
+    elements.list.classList.add('is-animating');
+    elements.list.style.setProperty('--drag-offset', '0px');
+    const promise = new Promise((resolve) => {
+      animationResolve = resolve;
+    });
+    if (reducedMotion?.matches) requestFrame(finishAnimation);
+    return promise;
+  }
+
+  function cancelInteraction() {
+    if (phase === 'destroyed') return;
+    drag = null;
+    axis = null;
+    if (phase !== 'animating') phase = 'idle';
+    resetVisualPosition();
+  }
+
+  function handlePointer(event) {
+    if (event.type === 'pointerdown') {
+      if (phase !== 'idle' || items.length <= 1) return;
+      if (event.target.closest?.('button')) return;
+      drag = {
+        pointerId: event.pointerId,
+        startX: event.clientX,
+        startY: event.clientY,
+        currentX: event.clientX,
+        startedAt: now(),
+      };
+      axis = null;
+      phase = 'dragging';
+      elements.list.setPointerCapture?.(event.pointerId);
+      return;
+    }
+
+    if (phase !== 'dragging' || !drag) return;
+    if (event.type === 'pointercancel' || event.type === 'lostpointercapture') {
+      cancelInteraction();
+      return;
+    }
+
+    if (event.type === 'pointermove') {
+      const dx = event.clientX - drag.startX;
+      const dy = event.clientY - drag.startY;
+      drag.currentX = event.clientX;
+      if (!axis && Math.max(Math.abs(dx), Math.abs(dy)) >= AXIS_LOCK_DISTANCE) {
+        axis = Math.abs(dx) >= Math.abs(dy) ? 'horizontal' : 'vertical';
+      }
+      if (axis === 'vertical') {
+        cancelInteraction();
+        return;
+      }
+      if (axis === 'horizontal') {
+        event.preventDefault?.();
+        elements.list.classList.add('is-dragging');
+        elements.list.style.setProperty('--drag-offset', `${dx}px`);
+      }
+      return;
+    }
+
+    if (event.type === 'pointerup') {
+      const dx = drag.currentX - drag.startX;
+      const elapsed = Math.max(1, now() - drag.startedAt);
+      const velocity = Math.abs(dx) / elapsed;
+      const shouldMove = axis === 'horizontal' && (
+        Math.abs(dx) >= SWIPE_DISTANCE || velocity >= SWIPE_VELOCITY
+      );
+      drag = null;
+      axis = null;
+      phase = 'idle';
+      if (shouldMove) animateBy(dx < 0 ? 1 : -1);
+      else animateBack();
+    }
+  }
+
+  function handleVisibilityChange() {
+    if (document.hidden) cancelInteraction();
+  }
+
+  function bindEvents() {
+    if (listenersBound) return;
+    listenersBound = true;
+    ['pointerdown', 'pointermove', 'pointerup', 'pointercancel',
+      'lostpointercapture'].forEach((type) => {
+      elements.list.addEventListener(type, handlePointer);
+    });
+    elements.list.addEventListener('transitionend', finishAnimation);
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+  }
+
+  function unbindEvents() {
+    if (!listenersBound) return;
+    listenersBound = false;
+    ['pointerdown', 'pointermove', 'pointerup', 'pointercancel',
+      'lostpointercapture'].forEach((type) => {
+      elements.list.removeEventListener(type, handlePointer);
+    });
+    elements.list.removeEventListener('transitionend', finishAnimation);
+    document.removeEventListener('visibilitychange', handleVisibilityChange);
+  }
+
   async function moveBy(delta) {
     if (items.length <= 1) return false;
-    commitIndex(currentIndex + delta);
-    return true;
+    return animateBy(delta);
   }
 
   return {
@@ -134,6 +301,9 @@ export function createCardSlider({
       onEditCard = callback;
     },
     destroy() {
+      unbindEvents();
+      phase = 'destroyed';
+      resetVisualPosition();
       elements.list.replaceChildren();
     },
   };
