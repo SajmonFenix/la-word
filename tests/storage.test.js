@@ -20,6 +20,72 @@ function loadStorage(extraContext = {}) {
   return context.__storage;
 }
 
+function createLocalStorage(initial = {}) {
+  const values = new Map(Object.entries(initial));
+  return {
+    getItem: (key) => values.has(key) ? values.get(key) : null,
+    setItem: (key, value) => values.set(key, value),
+    snapshot: () => Object.fromEntries(values),
+  };
+}
+
+function loadStorageWithIndexedCards(indexedCards, localStorage) {
+  const store = {
+    getAll: () => requestResult(indexedCards),
+    clear: () => requestResult(undefined),
+    put: () => requestResult(undefined),
+  };
+  const tx = {
+    objectStore: () => store,
+    oncomplete: null,
+    onerror: null,
+    onabort: null,
+  };
+  const db = {
+    transaction: () => tx,
+    close: () => {},
+  };
+  return loadStorage({
+    localStorage,
+    indexedDB: {
+      open: () => {
+        const request = {};
+        queueMicrotask(() => {
+          request.result = db;
+          request.onsuccess();
+        });
+        return request;
+      },
+    },
+  });
+
+  function requestResult(result) {
+    const request = {};
+    queueMicrotask(() => {
+      request.result = result;
+      request.onsuccess();
+      if (tx.oncomplete) tx.oncomplete();
+    });
+    return request;
+  }
+}
+
+function loadStorageWithIndexedFailure(localStorage) {
+  return loadStorage({
+    localStorage,
+    indexedDB: { open: () => requestFailure(new Error('db down')) },
+  });
+}
+
+function requestFailure(error) {
+  const request = {};
+  queueMicrotask(() => {
+    request.error = error;
+    request.onerror();
+  });
+  return request;
+}
+
 async function test(name, fn) {
   try {
     await fn();
@@ -30,6 +96,101 @@ async function test(name, fn) {
     process.exitCode = 1;
   }
 }
+
+test('uses the backup key when the primary local copy is malformed', () => {
+  const local = createLocalStorage({
+    laword_cards: '{broken',
+    laword_cards_backup: JSON.stringify([
+      { id: 'safe', front: 'dom', back: 'house', hint: '', color: '#123456', createdAt: 1 },
+    ]),
+  });
+  const storage = loadStorage({ localStorage: local });
+
+  const result = storage._loadFromLocalStorage();
+
+  assert.equal(result.source, 'backup');
+  assert.equal(result.cards[0].id, 'safe');
+});
+
+test('treats missing local data as an empty new state', () => {
+  const storage = loadStorage({ localStorage: createLocalStorage() });
+
+  const result = storage._loadFromLocalStorage();
+  assert.equal(result.source, null);
+  assert.equal(result.cards.length, 0);
+});
+
+test('rotates only a valid primary local copy into backup', () => {
+  const local = createLocalStorage({
+    laword_cards: JSON.stringify([
+      { id: 'old', front: 'stary', back: 'old', hint: '', color: '#123456', createdAt: 1 },
+    ]),
+  });
+  const storage = loadStorage({ localStorage: local });
+
+  storage._syncToLocalStorage([
+    { id: 'new', front: 'novy', back: 'new', hint: '', color: '#123456', createdAt: 2 },
+  ]);
+
+  const values = local.snapshot();
+  assert.equal(JSON.parse(values.laword_cards_backup)[0].id, 'old');
+  assert.equal(JSON.parse(values.laword_cards)[0].id, 'new');
+});
+
+test('prefers valid IndexedDB cards and reports no recovery', async () => {
+  const storage = loadStorageWithIndexedCards([
+    { id: 'db', front: 'dom', back: 'house', hint: '', color: '#123456', createdAt: 1 },
+  ], createLocalStorage());
+
+  const loadedCards = await storage.load();
+
+  assert.equal(loadedCards[0].id, 'db');
+  assert.equal(storage.consumeRecoveryNotice(), null);
+});
+
+test('migrates a local copy when IndexedDB is empty', async () => {
+  const local = createLocalStorage({
+    laword_cards: JSON.stringify([
+      { id: 'local', front: 'voda', back: 'water', hint: '', color: '#123456', createdAt: 1 },
+    ]),
+  });
+  const storage = loadStorageWithIndexedCards([], local);
+
+  const loadedCards = await storage.load();
+
+  assert.equal(loadedCards[0].id, 'local');
+  assert.equal(storage.consumeRecoveryNotice(), null);
+});
+
+test('reports recovery when the backup copy is used', async () => {
+  const local = createLocalStorage({
+    laword_cards: '{broken',
+    laword_cards_backup: JSON.stringify([
+      { id: 'backup', front: 'les', back: 'forest', hint: '', color: '#123456', createdAt: 1 },
+    ]),
+  });
+  const storage = loadStorageWithIndexedFailure(local);
+
+  const loadedCards = await storage.load();
+
+  assert.equal(loadedCards[0].id, 'backup');
+  assert.equal(storage.consumeRecoveryNotice(), 'Karty boli obnovené zo zálohy.');
+  assert.equal(storage.consumeRecoveryNotice(), null);
+});
+
+test('reports recovery from the primary local mirror after IndexedDB fails', async () => {
+  const local = createLocalStorage({
+    laword_cards: JSON.stringify([
+      { id: 'mirror', front: 'strom', back: 'tree', hint: '', color: '#123456', createdAt: 1 },
+    ]),
+  });
+  const storage = loadStorageWithIndexedFailure(local);
+
+  const loadedCards = await storage.load();
+
+  assert.equal(loadedCards[0].id, 'mirror');
+  assert.equal(storage.consumeRecoveryNotice(), 'Karty boli obnovené zo zálohy.');
+});
 
 test('normalizes valid imported cards and rejects malformed entries', () => {
   const storage = loadStorage();

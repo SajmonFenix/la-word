@@ -25,31 +25,43 @@ function openDB() {
 }
 
 const storage = {
+  _recoveryNotice: null,
+
+  consumeRecoveryNotice() {
+    const notice = this._recoveryNotice;
+    this._recoveryNotice = null;
+    return notice;
+  },
+
   async load() {
+    this._recoveryNotice = null;
     try {
-      const db = await openDB();
-      const tx = db.transaction(STORE_NAME, 'readonly');
-      const store = tx.objectStore(STORE_NAME);
-      const all = await new Promise((resolve, reject) => {
-        const req = store.getAll();
-        req.onsuccess = () => resolve(req.result);
-        req.onerror = () => reject(req.error);
-      });
-      db.close();
-      if (all && all.length > 0) {
-        const normalized = this._normalizeCards(all);
-        this._syncToLocalStorage(normalized);
-        return normalized;
+      const indexedCards = this._normalizeCards(await this._readAllFromIndexedDB());
+      if (indexedCards.length > 0) {
+        this._syncToLocalStorage(indexedCards);
+        return indexedCards;
       }
-      const fallback = this._loadFromLocalStorage();
-      if (fallback.length > 0) {
-        const normalized = this._normalizeCards(fallback);
-        await this.save(normalized);
-        return normalized;
+
+      const local = this._loadFromLocalStorage();
+      if (local.cards.length > 0) {
+        await this._writeAllToIndexedDB(local.cards);
+        return local.cards;
       }
       return [];
     } catch {
-      return this._loadFromLocalStorage();
+      const local = this._loadFromLocalStorage();
+      if (local.cards.length > 0) {
+        try {
+          await this._writeAllToIndexedDB(local.cards);
+        } catch {
+          // The valid local copy remains usable.
+        }
+        if (local.source) {
+          this._recoveryNotice = 'Karty boli obnovené zo zálohy.';
+        }
+        return local.cards;
+      }
+      return [];
     }
   },
 
@@ -63,24 +75,37 @@ const storage = {
     this._syncToLocalStorage(normalized);
   },
 
-  _loadFromLocalStorage() {
+  _readLocalCards(key) {
     try {
-      const data = localStorage.getItem(STORAGE_KEY);
-      if (data) return this._normalizeCards(JSON.parse(data));
-      const backup = localStorage.getItem(BACKUP_KEY);
-      return backup ? this._normalizeCards(JSON.parse(backup)) : [];
+      const value = localStorage.getItem(key);
+      if (value === null) return null;
+      return this._normalizeCards(JSON.parse(value));
     } catch {
-      return [];
+      return null;
     }
+  },
+
+  _loadFromLocalStorage() {
+    const primary = this._readLocalCards(STORAGE_KEY);
+    if (primary) return { cards: primary, source: 'primary' };
+
+    const backup = this._readLocalCards(BACKUP_KEY);
+    if (backup) return { cards: backup, source: 'backup' };
+
+    return { cards: [], source: null };
   },
 
   _syncToLocalStorage(cards) {
     try {
-      const existing = localStorage.getItem(STORAGE_KEY);
-      localStorage.setItem(BACKUP_KEY, existing || '[]');
+      const existing = this._readLocalCards(STORAGE_KEY);
+      if (existing) {
+        localStorage.setItem(BACKUP_KEY, JSON.stringify(existing));
+      }
       localStorage.setItem(STORAGE_KEY, JSON.stringify(cards));
+      return true;
     } catch (e) {
       console.error('localStorage sync failed:', e);
+      return false;
     }
   },
 
@@ -127,6 +152,16 @@ const storage = {
          createdAt
        };
      });
+   },
+
+   async _readAllFromIndexedDB() {
+     const db = await openDB();
+     try {
+       const tx = db.transaction(STORE_NAME, 'readonly');
+       return await this._request(tx.objectStore(STORE_NAME).getAll());
+     } finally {
+       db.close();
+     }
    },
 
    async _writeAllToIndexedDB(cards) {
