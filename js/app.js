@@ -165,7 +165,16 @@ function getSelectedColor() {
   return selected ? selected.dataset.color : COLORS[0];
 }
 
-function handleFormSubmit(e) {
+async function runCardMutation(mutate, failureMessage, notify = showToast) {
+  try {
+    return { ok: true, value: await mutate() };
+  } catch {
+    notify(failureMessage);
+    return { ok: false, value: null };
+  }
+}
+
+async function handleFormSubmit(e) {
   e.preventDefault();
   const front = document.getElementById('input-front').value.trim();
   const hint = document.getElementById('input-hint').value.trim();
@@ -175,26 +184,35 @@ function handleFormSubmit(e) {
   if (!front || !back) return;
 
   if (editingId) {
-    cards.update(editingId, { front, hint, back, color });
+    const result = await runCardMutation(
+      () => cards.update(editingId, { front, hint, back, color }),
+      'Kartu sa nepodarilo uložiť.'
+    );
+    if (!result.ok) return;
   } else {
-    const newCard = cards.add({ front, hint, back, color });
+    const result = await runCardMutation(
+      () => cards.add({ front, hint, back, color }),
+      'Kartu sa nepodarilo uložiť.'
+    );
+    if (!result.ok) return;
     closeModal();
-    ui.refresh();
-    ui.showCard(newCard.id);
+    ui.showCard(result.value.id);
     return;
   }
 
   closeModal();
-  ui.refresh();
 }
 
 async function handleDelete() {
   if (!editingId) return;
   const confirmed = await showConfirm(getDeleteConfirmCopy());
   if (!confirmed) return;
-  cards.delete(editingId);
+  const result = await runCardMutation(
+    () => cards.delete(editingId),
+    'Kartu sa nepodarilo vymazať.'
+  );
+  if (!result.ok) return;
   closeModal();
-  ui.refresh();
 }
 
 async function handleTranslate() {

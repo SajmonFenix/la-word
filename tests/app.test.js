@@ -20,14 +20,15 @@ function loadApp() {
     getTranslationFailureMessage,
     getImportConfirmCopy,
     getDeleteConfirmCopy,
-    isServiceWorkerUpdateMessage
+    isServiceWorkerUpdateMessage,
+    runCardMutation
   };`, context);
   return context.__app;
 }
 
-function test(name, fn) {
+async function test(name, fn) {
   try {
-    fn();
+    await fn();
     console.log(`ok - ${name}`);
   } catch (error) {
     console.error(`not ok - ${name}`);
@@ -90,4 +91,24 @@ test('service worker update message is recognized by type', () => {
   assert.equal(app.isServiceWorkerUpdateMessage({ type: 'APP_UPDATE_READY' }), true);
   assert.equal(app.isServiceWorkerUpdateMessage({ type: 'OTHER' }), false);
   assert.equal(app.isServiceWorkerUpdateMessage(null), false);
+});
+
+test('card mutation helper waits for persistence and reports a failure', async () => {
+  const app = loadApp();
+  const messages = [];
+  let finished = false;
+
+  const result = await app.runCardMutation(
+    async () => {
+      await Promise.resolve();
+      finished = true;
+      throw new Error('Cards could not be persisted');
+    },
+    'Kartu sa nepodarilo uložiť.',
+    (message) => messages.push(message)
+  );
+
+  assert.equal(finished, true);
+  assert.equal(result.ok, false);
+  assert.deepEqual(messages, ['Kartu sa nepodarilo uložiť.']);
 });

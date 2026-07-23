@@ -67,12 +67,25 @@ const storage = {
 
   async save(cards) {
     const normalized = this._normalizeCards(cards);
+    let indexedDBSaved = false;
+    let localStorageSaved = false;
+
     try {
       await this._writeAllToIndexedDB(normalized);
+      indexedDBSaved = true;
     } catch (e) {
       console.error('IndexedDB save failed:', e);
     }
-    this._syncToLocalStorage(normalized);
+
+    localStorageSaved = this._syncToLocalStorage(normalized);
+
+    const result = {
+      indexedDB: indexedDBSaved,
+      localStorage: localStorageSaved,
+      persisted: indexedDBSaved || localStorageSaved
+    };
+    if (!result.persisted) throw new Error('Cards could not be persisted');
+    return result;
   },
 
   _readLocalCards(key) {

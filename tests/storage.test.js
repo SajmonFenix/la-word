@@ -3,6 +3,8 @@ const fs = require('node:fs');
 const path = require('node:path');
 const vm = require('node:vm');
 
+const silentConsole = { ...console, error: () => {} };
+
 function loadStorage(extraContext = {}) {
   const source = fs.readFileSync(path.join(__dirname, '..', 'js', 'storage.js'), 'utf8');
   const context = {
@@ -190,6 +192,43 @@ test('reports recovery from the primary local mirror after IndexedDB fails', asy
 
   assert.equal(loadedCards[0].id, 'mirror');
   assert.equal(storage.consumeRecoveryNotice(), 'Karty boli obnovené zo zálohy.');
+});
+
+test('reports degraded success when IndexedDB fails but localStorage succeeds', async () => {
+  const local = createLocalStorage();
+  const storage = loadStorage({
+    console: silentConsole,
+    indexedDB: { open: () => requestFailure(new Error('db down')) },
+    localStorage: local,
+  });
+
+  const result = await storage.save([
+    { id: 'a', front: 'dom', back: 'house', hint: '', color: '#123456', createdAt: 1 },
+  ]);
+
+  assert.equal(JSON.stringify(result), JSON.stringify({
+    indexedDB: false,
+    localStorage: true,
+    persisted: true,
+  }));
+});
+
+test('throws when neither storage backend accepts the cards', async () => {
+  const storage = loadStorage({
+    console: silentConsole,
+    indexedDB: { open: () => requestFailure(new Error('db down')) },
+    localStorage: {
+      getItem: () => null,
+      setItem: () => { throw new Error('quota'); },
+    },
+  });
+
+  await assert.rejects(
+    storage.save([
+      { id: 'a', front: 'dom', back: 'house', hint: '', color: '#123456', createdAt: 1 },
+    ]),
+    /Cards could not be persisted/
+  );
 });
 
 test('normalizes valid imported cards and rejects malformed entries', () => {
