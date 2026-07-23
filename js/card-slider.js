@@ -79,6 +79,11 @@ export function createCardSlider({
 
   function renderWindow() {
     const entries = buildSliderWindow(items, currentIndex);
+    const centerSlot = Math.max(
+      0,
+      entries.findIndex((entry) => entry.offset === 0)
+    );
+    elements.list.style.setProperty('--center-slot', centerSlot);
     elements.list.replaceChildren(...entries.map(createSlide));
     elements.counter.textContent = items.length
       ? `${currentIndex + 1} / ${items.length}`

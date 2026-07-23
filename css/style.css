@@ -281,13 +281,31 @@ body {
   --slide-width: min(66vw, 340px);
   --slide-gap: clamp(22px, 7vw, 42px);
   --slide-step: calc(var(--slide-width) + var(--slide-gap));
-  --current-index: 0;
+  --center-slot: 2;
   --drag-offset: 0px;
+  --transition-offset: 0px;
   display: flex;
   gap: var(--slide-gap);
   height: 100%;
-  transform: translateX(calc((100vw - var(--slide-width)) / 2 - (var(--current-index) * var(--slide-step)) + var(--drag-offset)));
+  transform: translate3d(
+    calc(
+      (100vw - var(--slide-width)) / 2
+      - (var(--center-slot) * var(--slide-step))
+      + var(--drag-offset)
+      + var(--transition-offset)
+    ),
+    0,
+    0
+  );
+}
+
+.splide__list.is-animating {
   transition: transform 0.32s cubic-bezier(.2, .8, .2, 1);
+  will-change: transform;
+}
+
+.splide__list.is-dragging {
+  transition: none;
   will-change: transform;
 }
 
@@ -332,6 +350,13 @@ body {
 
 .splide__slide.is-active .card.flipped {
   transform: rotateY(180deg);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .splide__list,
+  .splide__slide .card {
+    transition-duration: 0.01ms !important;
+  }
 }
 
 .splide__slide .card-inner {

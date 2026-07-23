@@ -20,3 +20,25 @@ test('app shell disables browser double tap zoom gesture', () => {
 
   assert.match(appSurfaceRule, /touch-action:\s*manipulation;/);
 });
+
+test('virtual slider uses a fixed center and transient compositing hints', () => {
+  const baseRule = getRule('.splide__list');
+
+  assert.match(baseRule, /--center-slot:\s*2/);
+  assert.doesNotMatch(baseRule, /will-change/);
+  assert.match(
+    getRule('.splide__list.is-dragging'),
+    /will-change:\s*transform/
+  );
+  assert.match(
+    getRule('.splide__list.is-animating'),
+    /will-change:\s*transform/
+  );
+});
+
+test('slider supports reduced motion', () => {
+  assert.match(
+    css,
+    /@media\s*\(prefers-reduced-motion:\s*reduce\)[\s\S]*\.splide__list/
+  );
+});
