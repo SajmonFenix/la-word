@@ -49,3 +49,45 @@ test('initialization tolerates failed service worker readiness', async () => {
   assert.equal(typeof controller.apply, 'function');
   assert.equal(typeof listeners.controllerchange, 'function');
 });
+
+test('an installed update only shows the banner and does not reload', async () => {
+  const reloads = [];
+  const updates = [];
+  const serviceWorkerListeners = {};
+  const registrationListeners = {};
+  const workerListeners = {};
+  const worker = {
+    state: 'installing',
+    addEventListener: (type, listener) => {
+      workerListeners[type] = listener;
+    },
+  };
+  const registration = {
+    waiting: null,
+    installing: worker,
+    addEventListener: (type, listener) => {
+      registrationListeners[type] = listener;
+    },
+  };
+  const serviceWorker = {
+    controller: {},
+    ready: Promise.resolve(registration),
+    addEventListener: (type, listener) => {
+      serviceWorkerListeners[type] = listener;
+    },
+  };
+
+  initPwaUpdates({
+    serviceWorker,
+    reload: () => reloads.push('reload'),
+    showUpdate: () => updates.push('ready'),
+  });
+  await Promise.resolve();
+  registrationListeners.updatefound();
+  worker.state = 'installed';
+  workerListeners.statechange();
+
+  assert.deepEqual(updates, ['ready']);
+  assert.deepEqual(reloads, []);
+  assert.equal(typeof serviceWorkerListeners.controllerchange, 'function');
+});

@@ -1,10 +1,12 @@
-const CACHE = 'la-word-v6';
+const CACHE = 'la-word-v7';
 const APP_SHELL = [
   './',
   './index.html',
   './css/style.css',
   './js/storage.js',
   './js/cards.js',
+  './js/slider-window.js',
+  './js/card-slider.js',
   './js/ui.js',
   './js/feedback.js',
   './js/sheet.js',
