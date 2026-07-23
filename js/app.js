@@ -67,6 +67,7 @@ async function init() {
    loadFontSizes();
    loadTranslationSettings();
    bindEvents();
+   showStorageRecoveryNotice();
    initServiceWorkerUpdates();
 }
 
@@ -460,6 +461,11 @@ function showToast(message) {
    toast.classList.remove('hidden');
    clearTimeout(showToast._timeout);
    showToast._timeout = setTimeout(() => toast.classList.add('hidden'), 2600);
+}
+
+function showStorageRecoveryNotice(notify = showToast) {
+   const message = storage.consumeRecoveryNotice();
+   if (message) notify(message);
 }
 
 function initServiceWorkerUpdates() {

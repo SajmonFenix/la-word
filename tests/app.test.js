@@ -25,7 +25,8 @@ function loadApp(extraContext = {}) {
     runCardMutation,
     getBackupSettings,
     getImportErrorMessage,
-    applyBackupSettings
+    applyBackupSettings,
+    showStorageRecoveryNotice
   };`, context);
   return context.__app;
 }
@@ -173,4 +174,17 @@ test('applies all imported settings through their public APIs', () => {
     ['font', 120, 80],
     ['arrows', false],
   ]));
+});
+
+test('shows a one-shot recovery notice after cards initialize', () => {
+  const shown = [];
+  const app = loadApp({
+    storage: {
+      consumeRecoveryNotice: () => 'Karty boli obnovené zo zálohy.',
+    },
+  });
+
+  app.showStorageRecoveryNotice((message) => shown.push(message));
+
+  assert.deepEqual(shown, ['Karty boli obnovené zo zálohy.']);
 });
