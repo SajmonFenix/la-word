@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import {
   applyBackupSettings,
   collectBackupSettings,
+  createBackupController,
   getImportErrorMessage,
 } from '../js/backup.js';
 
@@ -54,4 +55,30 @@ test('maps import failures to current Slovak messages', () => {
     getImportErrorMessage(new Error('Invalid backup format')),
     'Vybraný súbor nie je platná záloha.'
   );
+});
+
+test('backup import validates before confirmation and refreshes after save', async () => {
+  const calls = [];
+  const controller = createBackupController({
+    storage: {
+      parseImportData: () => calls.push('parse'),
+      importData: async (_text, apply) => {
+        calls.push('import');
+        apply({});
+        return { cards: [{ front: 'dom' }] };
+      },
+    },
+    cards: { init: async () => calls.push('cards') },
+    applySettings: () => calls.push('settings'),
+    refreshSettings: () => calls.push('refresh'),
+    confirm: async () => { calls.push('confirm'); return true; },
+    toast: (message) => calls.push(message),
+  });
+
+  await controller.importText('{"cards":[]}');
+
+  assert.deepEqual(calls, [
+    'parse', 'confirm', 'import', 'settings', 'cards', 'refresh',
+    'Importovaných kariet: 1.',
+  ]);
 });
