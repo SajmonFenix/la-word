@@ -1,7 +1,12 @@
-const assert = require('node:assert/strict');
-const fs = require('node:fs');
-const path = require('node:path');
-const vm = require('node:vm');
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import fs from 'node:fs';
+import path from 'node:path';
+import vm from 'node:vm';
+import { fileURLToPath } from 'node:url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 function loadCards(storage) {
   const source = fs.readFileSync(path.join(__dirname, '..', 'js', 'cards.js'), 'utf8');
@@ -32,17 +37,6 @@ function deferred() {
     reject = rejectPromise;
   });
   return { promise, resolve, reject };
-}
-
-async function test(name, fn) {
-  try {
-    await fn();
-    console.log(`ok - ${name}`);
-  } catch (error) {
-    console.error(`not ok - ${name}`);
-    console.error(error);
-    process.exitCode = 1;
-  }
 }
 
 test('add waits for persistence before publishing the new model', async () => {

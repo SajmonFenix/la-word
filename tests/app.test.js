@@ -1,7 +1,12 @@
-const assert = require('node:assert/strict');
-const fs = require('node:fs');
-const path = require('node:path');
-const vm = require('node:vm');
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import fs from 'node:fs';
+import path from 'node:path';
+import vm from 'node:vm';
+import { fileURLToPath } from 'node:url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 function loadApp(extraContext = {}) {
   const source = fs.readFileSync(path.join(__dirname, '..', 'js', 'app.js'), 'utf8');
@@ -30,17 +35,6 @@ function loadApp(extraContext = {}) {
     createServiceWorkerUpdateController
   };`, context);
   return context.__app;
-}
-
-async function test(name, fn) {
-  try {
-    await fn();
-    console.log(`ok - ${name}`);
-  } catch (error) {
-    console.error(`not ok - ${name}`);
-    console.error(error);
-    process.exitCode = 1;
-  }
 }
 
 test('sheet drag starts only from non-interactive areas', () => {
