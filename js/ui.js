@@ -1,7 +1,15 @@
+import { cards } from './cards.js';
+
 const STORAGE_KEY_SHOW_ARROWS = 'laword_show_arrows';
 const SWIPE_THRESHOLD = 70;
 
 const PENCIL_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.83 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg>';
+
+export function createUI({
+  cardsModel = cards,
+  document = globalThis.document,
+  localStorage = globalThis.localStorage,
+} = {}) {
 
 const ui = {
   _currentIndex: 0,
@@ -22,7 +30,7 @@ const ui = {
   },
 
   refresh() {
-    const all = cards.getAll();
+    const all = cardsModel.getAll();
     if (all.length === 0) {
       this._currentIndex = 0;
     } else if (this._currentIndex >= all.length) {
@@ -32,7 +40,7 @@ const ui = {
   },
 
   render() {
-    const all = cards.getAll();
+    const all = cardsModel.getAll();
     const container = document.getElementById('card-container');
     const emptyState = document.getElementById('empty-state');
     const cardArea = document.getElementById('card-area');
@@ -97,7 +105,7 @@ const ui = {
   },
 
   showCard(id) {
-    const all = cards.getAll();
+    const all = cardsModel.getAll();
     const idx = all.findIndex(c => c.id === id);
     if (idx !== -1) {
       this._currentIndex = idx;
@@ -112,6 +120,14 @@ const ui = {
 
   showPrev() {
     this._moveBy(-1);
+  },
+
+  showIndex(index) {
+    const all = cardsModel.getAll();
+    if (index < 0 || index >= all.length) return;
+    this._currentIndex = index;
+    this._syncSlides();
+    this._updateCounter();
   },
 
   toggleArrows(show) {
@@ -129,7 +145,7 @@ const ui = {
   },
 
   search(query) {
-    const all = cards.getAll();
+    const all = cardsModel.getAll();
     const q = query.toLowerCase().trim();
     if (!q || all.length === 0) return null;
 
@@ -148,7 +164,7 @@ const ui = {
   },
 
   _moveBy(delta) {
-    const all = cards.getAll();
+    const all = cardsModel.getAll();
     if (all.length === 0) return;
     this._currentIndex = (this._currentIndex + delta + all.length) % all.length;
     this._syncSlides();
@@ -163,7 +179,7 @@ const ui = {
         e.stopPropagation();
         const slide = btn.closest('.splide__slide');
         const idx = Number(slide.dataset.index);
-        const card = cards.getAll()[idx];
+        const card = cardsModel.getAll()[idx];
         if (card && this.onEditCard) this.onEditCard(card);
         return;
       }
@@ -205,7 +221,7 @@ const ui = {
   },
 
   _handlePointer(e) {
-    const all = cards.getAll();
+    const all = cardsModel.getAll();
     if (all.length <= 1) return;
 
     if (e.type === 'pointerdown') {
@@ -239,7 +255,7 @@ const ui = {
   },
 
   _syncSlides() {
-    const all = cards.getAll();
+    const all = cardsModel.getAll();
     const list = document.querySelector('#card-container .splide__list');
     if (!list || all.length === 0) return;
 
@@ -259,13 +275,13 @@ const ui = {
   },
 
   _getWrappedIndex(offset) {
-    const all = cards.getAll();
+    const all = cardsModel.getAll();
     if (all.length === 0) return -1;
     return (this._currentIndex + offset + all.length) % all.length;
   },
 
   _updateCounter() {
-    const all = cards.getAll();
+    const all = cardsModel.getAll();
     const el = document.getElementById('card-counter');
     el.textContent = all.length === 0 ? '0 / 0' : `${this._currentIndex + 1} / ${all.length}`;
   },
@@ -281,3 +297,8 @@ const ui = {
     });
   },
 };
+
+return ui;
+}
+
+export const ui = createUI();

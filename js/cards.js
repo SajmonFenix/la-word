@@ -1,12 +1,22 @@
+import { storage } from './storage.js';
+
+export function createCards({
+  persistence = storage,
+  eventTarget = globalThis.document,
+  createEvent = (type, options) => new CustomEvent(type, options),
+  now = () => Date.now(),
+  random = () => Math.random(),
+} = {}) {
+
 function generateId() {
-  return Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+  return now().toString(36) + random().toString(36).slice(2, 7);
 }
 
 const cards = {
   _items: [],
 
   async init() {
-    this._items = await storage.load();
+    this._items = await persistence.load();
     this._notify();
   },
 
@@ -26,7 +36,7 @@ const cards = {
         hint: (hint || '').trim(),
         back: back.trim(),
         color: color || '#4A90D9',
-        createdAt: Date.now()
+        createdAt: now()
       };
       this._items.push(card);
       return card;
@@ -59,7 +69,7 @@ const cards = {
     const previous = this._items.map(card => ({ ...card }));
     const result = mutate();
     try {
-      await storage.save(this._items);
+      await persistence.save(this._items);
       this._notify();
       return result;
     } catch (error) {
@@ -69,7 +79,12 @@ const cards = {
   },
 
   _notify() {
-    const event = new CustomEvent('cards-change', { detail: this._items });
-    document.dispatchEvent(event);
+    const event = createEvent('cards-change', { detail: this._items });
+    eventTarget.dispatchEvent(event);
   }
 };
+
+return cards;
+}
+
+export const cards = createCards();

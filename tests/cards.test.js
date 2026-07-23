@@ -1,32 +1,15 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import fs from 'node:fs';
-import path from 'node:path';
-import vm from 'node:vm';
-import { fileURLToPath } from 'node:url';
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+import { createCards } from '../js/cards.js';
 
 function loadCards(storage) {
-  const source = fs.readFileSync(path.join(__dirname, '..', 'js', 'cards.js'), 'utf8');
   const events = [];
-  const context = {
-    storage,
-    CustomEvent: class CustomEvent {
-      constructor(type, options) {
-        this.type = type;
-        this.detail = options.detail;
-      }
-    },
-    document: {
-      dispatchEvent: (event) => events.push(event),
-    },
-  };
-
-  vm.createContext(context);
-  vm.runInContext(`${source}\nglobalThis.__cards = cards;`, context);
-  return { cards: context.__cards, events };
+  const cards = createCards({
+    persistence: storage,
+    eventTarget: { dispatchEvent: (event) => events.push(event) },
+    createEvent: (type, options) => ({ type, detail: options.detail }),
+  });
+  return { cards, events };
 }
 
 function deferred() {

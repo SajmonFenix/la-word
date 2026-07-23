@@ -13,6 +13,13 @@ const BACKUP_VERSION = 1;
 const BACKUP_FONT_SIZE_MIN = 70;
 const BACKUP_FONT_SIZE_MAX = 150;
 
+export function createStorage({
+  indexedDB = globalThis.indexedDB,
+  localStorage = globalThis.localStorage,
+  console = globalThis.console,
+  now = () => Date.now(),
+} = {}) {
+
 function openDB() {
   return new Promise((resolve, reject) => {
     const request = indexedDB.open(DB_NAME, DB_VERSION);
@@ -185,7 +192,7 @@ const storage = {
 
        const id = String(card.id || this._generateId()).replace(/[^a-z0-9_-]/gi, '');
        const color = /^#[0-9a-f]{6}$/i.test(card.color || '') ? card.color : DEFAULT_CARD_COLOR;
-       const createdAt = Number.isFinite(card.createdAt) ? card.createdAt : Date.now();
+       const createdAt = Number.isFinite(card.createdAt) ? card.createdAt : now();
 
        return {
          id: id || this._generateId(),
@@ -277,7 +284,7 @@ const storage = {
    },
 
    _generateId() {
-     return Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+     return now().toString(36) + Math.random().toString(36).slice(2, 7);
    },
 
    // Font size management
@@ -327,3 +334,8 @@ const storage = {
      return { ...DEFAULT_TRANSLATION_SETTINGS };
    }
 };
+
+return storage;
+}
+
+export const storage = createStorage();

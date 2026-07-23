@@ -1,18 +1,11 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import fs from 'node:fs';
-import path from 'node:path';
-import vm from 'node:vm';
-import { fileURLToPath } from 'node:url';
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+import { createStorage } from '../js/storage.js';
 
 const silentConsole = { ...console, error: () => {} };
 
 function loadStorage(extraContext = {}) {
-  const source = fs.readFileSync(path.join(__dirname, '..', 'js', 'storage.js'), 'utf8');
-  const context = {
+  return createStorage({
     console,
     localStorage: {
       getItem: () => null,
@@ -20,11 +13,7 @@ function loadStorage(extraContext = {}) {
     },
     indexedDB: {},
     ...extraContext,
-  };
-
-  vm.createContext(context);
-  vm.runInContext(`${source}\nglobalThis.__storage = storage;`, context);
-  return context.__storage;
+  });
 }
 
 function createLocalStorage(initial = {}) {
