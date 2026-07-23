@@ -1,6 +1,7 @@
 import {
   buildSliderWindow,
   reconcileCurrentIndex,
+  wrapIndex,
 } from './slider-window.js';
 
 export const LAST_CARD_KEY = 'laword_last_card_id';
@@ -82,8 +83,52 @@ export function createCardSlider({
     renderWindow();
   }
 
+  function persistCurrentCard() {
+    const id = items[currentIndex]?.id;
+    if (id) storage.setItem(LAST_CARD_KEY, id);
+    else storage.removeItem(LAST_CARD_KEY);
+  }
+
+  function commitIndex(index, { persist = true } = {}) {
+    currentIndex = wrapIndex(index, items.length);
+    renderWindow();
+    if (persist) persistCurrentCard();
+    return currentIndex;
+  }
+
+  function showIndex(index) {
+    if (items.length === 0 || index < 0 || index >= items.length) return false;
+    commitIndex(index);
+    return true;
+  }
+
+  function showCard(id) {
+    const index = items.findIndex((card) => card.id === id);
+    return index === -1 ? false : showIndex(index);
+  }
+
+  function setCards(cards, { preferredId } = {}) {
+    const previousId = preferredId ?? items[currentIndex]?.id ?? null;
+    const previousIndex = currentIndex;
+    items = [...cards];
+    currentIndex = reconcileCurrentIndex(items, previousId, previousIndex);
+    renderWindow();
+    persistCurrentCard();
+  }
+
+  async function moveBy(delta) {
+    if (items.length <= 1) return false;
+    commitIndex(currentIndex + delta);
+    return true;
+  }
+
   return {
     init,
+    setCards,
+    showCard,
+    showIndex,
+    next: () => moveBy(1),
+    previous: () => moveBy(-1),
     getCurrentCardId: () => items[currentIndex]?.id || null,
     setOnEditCard(callback) {
       onEditCard = callback;

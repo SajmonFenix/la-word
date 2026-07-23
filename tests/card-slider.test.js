@@ -44,3 +44,58 @@ test('zero to four cards never create duplicate interactive slides', () => {
     assert.equal(harness.list.children.length, count);
   }
 });
+
+test('next and previous wrap and persist the confirmed card id', async () => {
+  const harness = createSliderHarness();
+  const slider = createCardSlider(harness.dependencies);
+  slider.init(makeCards(1000));
+
+  await slider.previous();
+  assert.equal(slider.getCurrentCardId(), 'card-1000');
+  assert.equal(
+    harness.storage.getItem('laword_last_card_id'),
+    'card-1000'
+  );
+  assert.equal(harness.counter.textContent, '1000 / 1000');
+
+  await slider.next();
+  assert.equal(slider.getCurrentCardId(), 'card-1');
+});
+
+test('reload restores the last card by id', () => {
+  const harness = createSliderHarness({
+    laword_last_card_id: 'card-92',
+  });
+  const slider = createCardSlider(harness.dependencies);
+
+  slider.init(makeCards(1000));
+
+  assert.equal(slider.getCurrentCardId(), 'card-92');
+  assert.equal(harness.counter.textContent, '92 / 1000');
+});
+
+test('setCards preserves id and deletion selects a valid neighbor', () => {
+  const harness = createSliderHarness();
+  const slider = createCardSlider(harness.dependencies);
+  const initial = makeCards(5);
+  slider.init(initial);
+  slider.showCard('card-5');
+
+  slider.setCards(initial.slice(0, 4));
+
+  assert.equal(slider.getCurrentCardId(), 'card-4');
+  assert.equal(harness.counter.textContent, '4 / 4');
+});
+
+test('an empty collection clears the saved id', () => {
+  const harness = createSliderHarness({
+    laword_last_card_id: 'card-2',
+  });
+  const slider = createCardSlider(harness.dependencies);
+  slider.init(makeCards(2));
+
+  slider.setCards([]);
+
+  assert.equal(harness.storage.getItem('laword_last_card_id'), null);
+  assert.equal(harness.counter.textContent, '0 / 0');
+});
