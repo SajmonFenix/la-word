@@ -41,6 +41,7 @@ export function createCardSlider({
     const hint = document.createElement('span');
     const back = document.createElement('div');
     const backText = document.createElement('span');
+    const backActions = document.createElement('div');
     const edit = document.createElement('button');
 
     slide.className = 'splide__slide';
@@ -50,6 +51,7 @@ export function createCardSlider({
     hint.className = 'hint';
     back.className = 'card-back';
     backText.className = 'card-back-text';
+    backActions.className = 'card-back-actions';
     edit.className = 'btn-edit';
     edit.type = 'button';
     edit.title = 'Upraviť';
@@ -73,7 +75,8 @@ export function createCardSlider({
       onEditCard?.(entry.card);
     });
     front.append(frontText, hint);
-    back.append(backText, edit);
+    backActions.append(edit);
+    back.append(backText, backActions);
     card.append(front, back);
     slide.append(card);
     return slide;

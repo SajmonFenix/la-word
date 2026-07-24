@@ -74,6 +74,17 @@ function createNode(tagName = 'div') {
       }
       return this.parentNode?.closest?.(selector) || null;
     },
+    querySelector(selector) {
+      const className = selector.startsWith('.') ? selector.slice(1) : null;
+      for (const child of this.children) {
+        if (className && child.className?.split(/\s+/).includes(className)) {
+          return child;
+        }
+        const found = child.querySelector?.(selector);
+        if (found) return found;
+      }
+      return null;
+    },
   };
   return node;
 }

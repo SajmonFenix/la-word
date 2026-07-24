@@ -43,7 +43,7 @@ test('edit action preserves the application pencil icon', () => {
 
   slider.init(makeCards(1));
 
-  assert.match(harness.activeBack().children[1].innerHTML, /<svg/);
+  assert.match(harness.activeBack().querySelector('.btn-edit').innerHTML, /<svg/);
 });
 
 test('zero to four cards never create duplicate interactive slides', () => {
