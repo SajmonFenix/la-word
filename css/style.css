@@ -1116,7 +1116,7 @@ body {
 #btn-fav {
   position: absolute;
   left: 50%;
-  bottom: max(152px, calc(140px + env(safe-area-inset-bottom)));
+  bottom: max(230px, calc(218px + env(safe-area-inset-bottom)));
   transform: translateX(-50%);
   width: clamp(40px, 11vw, 56px);
   height: clamp(40px, 11vw, 56px);
