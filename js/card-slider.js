@@ -264,14 +264,15 @@ export function createCardSlider({
       const dx = drag.currentX - drag.startX;
       const elapsed = Math.max(1, now() - drag.startedAt);
       const velocity = Math.abs(dx) / elapsed;
-      const shouldMove = axis === 'horizontal' && (
+      const wasHorizontal = axis === 'horizontal';
+      const shouldMove = wasHorizontal && (
         Math.abs(dx) >= SWIPE_DISTANCE || velocity >= SWIPE_VELOCITY
       );
       drag = null;
       axis = null;
       phase = 'idle';
       if (shouldMove) animateBy(dx < 0 ? 1 : -1);
-      else animateBack();
+      else if (wasHorizontal) animateBack();
     }
   }
 
