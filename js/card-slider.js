@@ -176,6 +176,14 @@ export function createCardSlider({
     animationDelta = delta;
     elements.list.classList.remove('is-dragging');
     elements.list.classList.add('is-animating');
+    for (const slide of elements.list.children) {
+      const newOffset = parseInt(slide.dataset.offset, 10) - delta;
+      slide.dataset.offset = String(newOffset);
+      slide.classList.toggle('is-active', newOffset === 0);
+      slide.classList.toggle('is-prev', newOffset === -1);
+      slide.classList.toggle('is-next', newOffset === 1);
+    }
+    elements.list.style.setProperty('--drag-offset', '0px');
     elements.list.style.setProperty(
       '--transition-offset',
       delta > 0 ? 'calc(0px - var(--slide-step))' : 'var(--slide-step)'
