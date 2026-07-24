@@ -275,7 +275,7 @@ export function createCardSlider({
       axis = null;
       phase = 'idle';
       if (shouldMove) animateBy(dx < 0 ? 1 : -1);
-      else if (wasHorizontal) animateBack();
+      else if (wasHorizontal) resetVisualPosition();
     }
   }
 
