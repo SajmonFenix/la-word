@@ -28,8 +28,7 @@ export function createCardSlider({
   let axis = null;
   let animationDelta = 0;
   let animationResolve = null;
-  let queuedDelta = 0;
-  let queuedResolvers = [];
+
   let listenersBound = false;
   let suppressClick = false;
 
@@ -156,23 +155,12 @@ export function createCardSlider({
     resetVisualPosition();
     phase = 'idle';
     resolve?.(Boolean(delta));
-
-    if (queuedDelta) {
-      const nextDelta = queuedDelta;
-      const resolvers = queuedResolvers;
-      queuedDelta = 0;
-      queuedResolvers = [];
-      animateBy(nextDelta).then((result) => {
-        resolvers.forEach((queuedResolve) => queuedResolve(result));
-      });
-    }
   }
 
   function animateBy(delta) {
     if (items.length <= 1) return Promise.resolve(false);
     if (phase === 'animating') {
-      queuedDelta = delta;
-      return new Promise((resolve) => queuedResolvers.push(resolve));
+      finishAnimation();
     }
 
     phase = 'animating';

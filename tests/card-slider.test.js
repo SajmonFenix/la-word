@@ -147,7 +147,7 @@ test('vertical intent and pointercancel never change the confirmed index', async
   assert.equal(harness.storage.getItem('laword_last_card_id'), null);
 });
 
-test('rapid gestures keep at most one queued move', async () => {
+test('rapid gestures process each move immediately', async () => {
   const harness = createSliderHarness({}, { reducedMotion: false });
   const slider = createCardSlider(harness.dependencies);
   slider.init(makeCards(20));
@@ -158,7 +158,7 @@ test('rapid gestures keep at most one queued move', async () => {
   await harness.finishAllAnimations();
   await Promise.all([first, second, third]);
 
-  assert.equal(slider.getCurrentCardId(), 'card-3');
+  assert.equal(slider.getCurrentCardId(), 'card-4');
 });
 
 test('visibility loss restores the confirmed centered state', () => {
