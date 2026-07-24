@@ -326,6 +326,7 @@ body {
   cursor: pointer;
   position: relative;
   transform-style: preserve-3d;
+  transition: transform 0.35s ease;
 }
 
 .splide__slide.is-active {
@@ -334,7 +335,6 @@ body {
 
 .splide__slide .card.flipped {
   transform: rotateY(180deg);
-  transition: transform 0.35s ease;
 }
 
 @media (prefers-reduced-motion: reduce) {

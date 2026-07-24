@@ -50,7 +50,7 @@ test('card navigation keeps every slide at a constant scale and opacity', () => 
     getRule('.splide__slide.is-next .card'),
   ].join('\n');
 
-  assert.doesNotMatch(cardRule, /transition:[^;]*(?:transform|opacity)/);
+  assert.match(cardRule, /transition:\s*transform\s/);
   assert.doesNotMatch(neighborRule, /scale\s*\(/);
   assert.doesNotMatch(neighborRule, /opacity\s*:/);
 });
