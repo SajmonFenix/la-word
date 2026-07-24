@@ -23,6 +23,7 @@ export function createCardSlider({
   let items = [];
   let currentIndex = -1;
   let onEditCard = null;
+  let onToggleFavorite = null;
   let phase = 'idle';
   let drag = null;
   let axis = null;
@@ -38,6 +39,7 @@ export function createCardSlider({
     const front = document.createElement('div');
     const frontText = document.createElement('span');
     const hint = document.createElement('span');
+    const star = document.createElement('span');
     const back = document.createElement('div');
     const backText = document.createElement('span');
     const backActions = document.createElement('div');
@@ -48,6 +50,8 @@ export function createCardSlider({
     front.className = 'card-front';
     frontText.className = 'card-front-text';
     hint.className = 'hint';
+    star.className = 'star';
+    star.textContent = entry.card.favorite ? '★' : '☆';
     back.className = 'card-back';
     backText.className = 'card-back-text';
     backActions.className = 'card-back-actions';
@@ -73,7 +77,12 @@ export function createCardSlider({
       event.stopPropagation();
       onEditCard?.(entry.card);
     });
-    front.append(frontText, hint);
+    star.addEventListener('pointerdown', (event) => {
+      event.stopPropagation();
+      event.preventDefault();
+      onToggleFavorite?.(entry.card.id, !entry.card.favorite);
+    });
+    front.append(frontText, hint, star);
     backActions.append(edit);
     back.append(backText, backActions);
     card.append(front, back);
@@ -212,7 +221,7 @@ export function createCardSlider({
     if (event.type === 'pointerdown') {
       suppressClick = false;
       if (phase !== 'idle' || items.length <= 1) return;
-      if (event.target.closest?.('button')) return;
+      if (event.target.closest?.('button, .star')) return;
       drag = {
         pointerId: event.pointerId,
         startX: event.clientX,
@@ -324,6 +333,9 @@ export function createCardSlider({
     getCurrentCardId: () => items[currentIndex]?.id || null,
     setOnEditCard(callback) {
       onEditCard = callback;
+    },
+    setOnToggleFavorite(callback) {
+      onToggleFavorite = callback;
     },
     destroy() {
       unbindEvents();

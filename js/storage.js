@@ -190,18 +190,20 @@ const storage = {
          throw new Error(`Invalid card at index ${index}`);
        }
 
-       const id = String(card.id || this._generateId()).replace(/[^a-z0-9_-]/gi, '');
-       const color = /^#[0-9a-f]{6}$/i.test(card.color || '') ? card.color : DEFAULT_CARD_COLOR;
-       const createdAt = Number.isFinite(card.createdAt) ? card.createdAt : now();
+        const id = String(card.id || this._generateId()).replace(/[^a-z0-9_-]/gi, '');
+        const color = /^#[0-9a-f]{6}$/i.test(card.color || '') ? card.color : DEFAULT_CARD_COLOR;
+        const favorite = Boolean(card.favorite);
+        const createdAt = Number.isFinite(card.createdAt) ? card.createdAt : now();
 
-       return {
-         id: id || this._generateId(),
-         front,
-         hint: String(card.hint || '').trim(),
-         back,
-         color,
-         createdAt
-       };
+        return {
+          id: id || this._generateId(),
+          front,
+          hint: String(card.hint || '').trim(),
+          back,
+          color,
+          favorite,
+          createdAt
+        };
      });
    },
 

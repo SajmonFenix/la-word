@@ -36,6 +36,7 @@ const cards = {
         hint: (hint || '').trim(),
         back: back.trim(),
         color: color || '#4A90D9',
+        favorite: false,
         createdAt: now()
       };
       this._items.push(card);

@@ -13,6 +13,7 @@ export function createUI({
   let onEditCard = null;
   let showArrows = true;
   let initialized = false;
+  let favoritesActive = false;
 
   function getSlider() {
     if (!sliderController) {
@@ -36,14 +37,28 @@ export function createUI({
       .classList.toggle('hidden', items.length > 0);
     document.getElementById('card-area')
       .classList.toggle('hidden', items.length === 0);
+    const favEmpty = document.getElementById('favorites-empty-state');
+    if (favEmpty) {
+      const showFavEmpty = favoritesActive && items.length === 0;
+      favEmpty.classList.toggle('hidden', !showFavEmpty);
+      document.getElementById('empty-state')
+        .classList.toggle('hidden', showFavEmpty);
+    }
+  }
+
+  async function handleToggleFavorite(id, value) {
+    await cardsModel.update(id, { favorite: value });
+    if (favoritesActive) api.refresh();
   }
 
   const api = {
     init() {
       const items = cardsModel.getAll();
       showArrows = localStorage.getItem(STORAGE_KEY_SHOW_ARROWS) !== 'false';
+      favoritesActive = false;
       api.toggleArrows(showArrows, { persist: false });
       getSlider().setOnEditCard((card) => onEditCard?.(card));
+      getSlider().setOnToggleFavorite(handleToggleFavorite);
       getSlider().init(items);
       initialized = true;
       updateEmptyState(items);
@@ -51,7 +66,8 @@ export function createUI({
 
     refresh(options = {}) {
       if (!initialized) return;
-      const items = cardsModel.getAll();
+      const allCards = cardsModel.getAll();
+      const items = favoritesActive ? allCards.filter(c => c.favorite) : allCards;
       const preferredId = options.preferredId
         ?? getSlider().getCurrentCardId();
       getSlider().setCards(items, { preferredId });
@@ -79,6 +95,13 @@ export function createUI({
 
     destroy() {
       sliderController?.destroy();
+    },
+
+    toggleFavorites() {
+      favoritesActive = !favoritesActive;
+      api.refresh();
+      const btn = document.getElementById('btn-fav');
+      if (btn) btn.textContent = favoritesActive ? '★' : '☆';
     },
   };
 

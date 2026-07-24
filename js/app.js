@@ -80,6 +80,8 @@ export async function initApp(document = globalThis.document) {
   });
   $('btn-prev').addEventListener('click', () => ui.showPrev());
   $('btn-next').addEventListener('click', () => ui.showNext());
+  $('btn-fav').addEventListener('click', () => ui.toggleFavorites());
+  $('btn-fav-show-all').addEventListener('click', () => ui.toggleFavorites());
   $('toggle-arrows').addEventListener('change', (event) => ui.toggleArrows(event.target.checked));
   [['btn-front-minus', 'front', -1], ['btn-front-plus', 'front', 1], ['btn-back-minus', 'back', -1], ['btn-back-plus', 'back', 1]]
     .forEach(([id, type, direction]) => $(id).addEventListener('click', () => settings.adjustFontSize(type, direction)));
