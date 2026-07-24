@@ -273,6 +273,13 @@ export function createCardSlider({
       phase = 'idle';
       if (shouldMove) animateBy(dx < 0 ? 1 : -1);
       else if (wasHorizontal) animateBack();
+      else if (!suppressClick) {
+        const slide = event.target.closest?.('.splide__slide');
+        const card = event.target.closest?.('.card');
+        if (slide?.classList.contains('is-active') && card) {
+          card.classList.toggle('flipped');
+        }
+      }
     }
   }
 
