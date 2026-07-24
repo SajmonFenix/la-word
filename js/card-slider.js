@@ -222,6 +222,7 @@ export function createCardSlider({
 
   function handlePointer(event) {
     if (event.type === 'pointerdown') {
+      suppressClick = false;
       if (phase !== 'idle' || items.length <= 1) return;
       if (event.target.closest?.('button')) return;
       drag = {
