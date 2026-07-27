@@ -83,7 +83,7 @@ test('service worker refreshes cached assets for the flat slider transition', ()
     'utf8'
   );
 
-  assert.match(source, /const CACHE = 'la-word-v14';/);
+  assert.match(source, /const CACHE = 'la-word-v15';/);
 });
 
 test('SKIP_WAITING message activates the waiting worker', () => {
