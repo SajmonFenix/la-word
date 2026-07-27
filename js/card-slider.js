@@ -39,7 +39,6 @@ export function createCardSlider({
     const front = document.createElement('div');
     const frontText = document.createElement('span');
     const hint = document.createElement('span');
-    const star = document.createElement('span');
     const back = document.createElement('div');
     const backText = document.createElement('span');
     const backActions = document.createElement('div');
@@ -50,8 +49,6 @@ export function createCardSlider({
     front.className = 'card-front';
     frontText.className = 'card-front-text';
     hint.className = 'hint';
-    star.className = 'star';
-    star.textContent = entry.card.favorite ? '★' : '☆';
     back.className = 'card-back';
     backText.className = 'card-back-text';
     backActions.className = 'card-back-actions';
@@ -77,17 +74,26 @@ export function createCardSlider({
       event.stopPropagation();
       onEditCard?.(entry.card);
     });
-    star.addEventListener('pointerdown', (event) => {
-      event.stopPropagation();
-      event.preventDefault();
-      onToggleFavorite?.(entry.card.id, !entry.card.favorite);
-    });
-    front.append(frontText, hint, star);
+    front.append(frontText, hint);
     backActions.append(edit);
     back.append(backText, backActions);
     card.append(front, back);
     slide.append(card);
     return slide;
+  }
+
+  function syncFavoriteButton() {
+    const card = items[currentIndex];
+    const isFavorite = Boolean(card?.favorite);
+    elements.favoriteButton.classList.toggle('hidden', !card);
+    elements.favoriteButton.textContent = isFavorite ? '★' : '☆';
+    elements.favoriteButton.setAttribute('aria-pressed', String(isFavorite));
+    elements.favoriteButton.setAttribute(
+      'aria-label',
+      isFavorite
+        ? 'Odstrániť kartu z obľúbených'
+        : 'Pridať kartu medzi obľúbené'
+    );
   }
 
   function renderWindow() {
@@ -102,6 +108,7 @@ export function createCardSlider({
       ? `${currentIndex + 1} / ${items.length}`
       : '0 / 0';
     elements.container.classList.toggle('hidden', items.length === 0);
+    syncFavoriteButton();
   }
 
   function init(cards) {

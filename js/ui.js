@@ -24,6 +24,7 @@ export function createUI({
           counter: document.getElementById('card-counter'),
           previousButton: document.getElementById('btn-prev'),
           nextButton: document.getElementById('btn-next'),
+          favoriteButton: document.getElementById('btn-card-favorite'),
         },
         document,
         storage: localStorage,

@@ -194,3 +194,30 @@ test('active card flips on click and a navigated card starts unflipped', async (
     false
   );
 });
+
+test('favorite control stays mounted while the virtual window is rebuilt', async () => {
+  const harness = createSliderHarness();
+  const slider = createCardSlider(harness.dependencies);
+  slider.init([
+    { ...makeCards(1)[0], favorite: false },
+    { ...makeCards(2)[1], favorite: true },
+  ]);
+  const button = harness.favoriteButton;
+
+  assert.equal(harness.list.querySelector('.star'), null);
+  assert.equal(button.textContent, '☆');
+
+  await slider.next();
+
+  assert.equal(harness.favoriteButton, button);
+  assert.equal(button.textContent, '★');
+  assert.equal(button['aria-pressed'], 'true');
+});
+
+test('favorite control is hidden without a current card', () => {
+  const harness = createSliderHarness();
+
+  createCardSlider(harness.dependencies).init([]);
+
+  assert.equal(harness.favoriteButton.classList.contains('hidden'), true);
+});
