@@ -68,8 +68,16 @@ function createNode(tagName = 'div') {
       );
     },
     closest(selector) {
-      const className = selector.startsWith('.') ? selector.slice(1) : null;
-      if (className && this.className.split(/\s+/).includes(className)) {
+      const matches = selector.split(',').some((part) => {
+        const candidate = part.trim();
+        if (candidate.startsWith('.')) {
+          const className = candidate.slice(1);
+          return this.classList.contains(className)
+            || this.className.split(/\s+/).includes(className);
+        }
+        return this.tagName.toLowerCase() === candidate.toLowerCase();
+      });
+      if (matches) {
         return this;
       }
       return this.parentNode?.closest?.(selector) || null;
@@ -127,16 +135,13 @@ export function createSliderHarness(initialStorage = {}, options = {}) {
   const activeCard = () => activeSlide()?.children[0];
   const activeFront = () => activeCard()?.children[0];
   const activeBack = () => activeCard()?.children[1];
-  const pointerTarget = {
-    closest: (selector) => selector === 'button' ? null : activeCard(),
-  };
   const dispatchPointer = (type, x, y = 0) => {
     list.dispatchEvent({
       type,
       pointerId: 1,
       clientX: x,
       clientY: y,
-      target: pointerTarget,
+      target: activeFront(),
       preventDefault() {},
     });
   };

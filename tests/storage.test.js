@@ -230,7 +230,7 @@ test('exports cards and settings as a versioned backup', () => {
     format: 'la-carta-backup',
     version: 1,
     exportedAt: '2026-07-23T12:00:00.000Z',
-    cards: [{ id: 'a', front: 'dom', hint: '', back: 'house', color: '#123456', createdAt: 1 }],
+    cards: [{ id: 'a', front: 'dom', hint: '', back: 'house', color: '#123456', favorite: false, createdAt: 1 }],
     settings: {
       translation: { source: 'sk', target: 'en' },
       fontSizes: { front: 110, back: 90 },
@@ -358,6 +358,7 @@ test('normalizes valid imported cards and rejects malformed entries', () => {
     hint: 'domov',
     back: 'house',
     color: '#123456',
+    favorite: false,
     createdAt: 10,
   }));
   assert.match(normalized[1].id, /^[a-z0-9]+$/);
