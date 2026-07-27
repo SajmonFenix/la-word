@@ -14,6 +14,8 @@ export function createUI({
   let showArrows = true;
   let initialized = false;
   let favoritesActive = false;
+  let sliderState = { currentCardId: null, busy: false };
+  let favoritePending = false;
 
   function getSlider() {
     if (!sliderController) {
@@ -24,7 +26,6 @@ export function createUI({
           counter: document.getElementById('card-counter'),
           previousButton: document.getElementById('btn-prev'),
           nextButton: document.getElementById('btn-next'),
-          favoriteButton: document.getElementById('btn-card-favorite'),
         },
         document,
         storage: localStorage,
@@ -49,10 +50,36 @@ export function createUI({
     }
   }
 
-  async function handleToggleFavorite(id, value) {
-    const updated = await cardsModel.update(id, { favorite: value });
-    if (favoritesActive) api.refresh();
-    return updated;
+  function syncFavoriteControls() {
+    const viewButton = document.getElementById('btn-favorites-view');
+    viewButton.setAttribute('aria-pressed', String(favoritesActive));
+    viewButton.setAttribute(
+      'aria-label',
+      favoritesActive
+        ? 'Zobraziť všetky karty'
+        : 'Zobraziť obľúbené karty'
+    );
+
+    const button = document.getElementById('btn-card-favorite');
+    const card = sliderState.currentCardId
+      ? cardsModel.getById(sliderState.currentCardId)
+      : null;
+    const isFavorite = Boolean(card?.favorite);
+    button.classList.toggle('hidden', !card);
+    button.disabled = !card || sliderState.busy || favoritePending;
+    button.textContent = isFavorite ? '★' : '☆';
+    button.setAttribute('aria-pressed', String(isFavorite));
+    button.setAttribute(
+      'aria-label',
+      isFavorite
+        ? 'Odstrániť kartu z obľúbených'
+        : 'Pridať kartu medzi obľúbené'
+    );
+  }
+
+  function handleSliderState(state) {
+    sliderState = state;
+    syncFavoriteControls();
   }
 
   const api = {
@@ -62,10 +89,11 @@ export function createUI({
       favoritesActive = false;
       api.toggleArrows(showArrows, { persist: false });
       getSlider().setOnEditCard((card) => onEditCard?.(card));
-      getSlider().setOnToggleFavorite(handleToggleFavorite);
+      getSlider().setOnStateChange(handleSliderState);
       getSlider().init(items);
       initialized = true;
       updateEmptyState(items);
+      syncFavoriteControls();
     },
 
     refresh(options = {}) {
@@ -101,11 +129,34 @@ export function createUI({
       sliderController?.destroy();
     },
 
+    async toggleCurrentFavorite() {
+      if (sliderState.busy || favoritePending) return false;
+      const card = sliderState.currentCardId
+        ? cardsModel.getById(sliderState.currentCardId)
+        : null;
+      if (!card) return false;
+
+      favoritePending = true;
+      syncFavoriteControls();
+      try {
+        const updated = await cardsModel.update(card.id, {
+          favorite: !Boolean(card.favorite),
+        });
+        if (favoritesActive) api.refresh({ preferredId: card.id });
+        return Boolean(updated);
+      } catch (error) {
+        console.error('Nepodarilo sa zmeniť obľúbenú kartu:', error);
+        return false;
+      } finally {
+        favoritePending = false;
+        syncFavoriteControls();
+      }
+    },
+
     toggleFavorites() {
       favoritesActive = !favoritesActive;
       api.refresh();
-      const btn = document.getElementById('btn-fav');
-      if (btn) btn.textContent = favoritesActive ? '★' : '☆';
+      syncFavoriteControls();
     },
   };
 

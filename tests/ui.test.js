@@ -12,11 +12,23 @@ function classList() {
   };
 }
 
+function button(textContent = '') {
+  const attributes = new Map();
+  return {
+    classList: classList(),
+    textContent,
+    disabled: false,
+    setAttribute: (name, value) => attributes.set(name, String(value)),
+    getAttribute: (name) => attributes.get(name) ?? null,
+  };
+}
+
 function createDocument() {
   const nodes = {
     'btn-prev': { classList: classList() },
     'btn-next': { classList: classList() },
-    'btn-fav': { textContent: '☆' },
+    'btn-favorites-view': button(),
+    'btn-card-favorite': button('☆'),
     'card-area': { classList: classList() },
     'empty-state': { classList: classList() },
     'favorites-empty-state': { classList: classList() },
@@ -40,8 +52,8 @@ function createSliderSpy(calls, currentId = 'card-2') {
       'editCallback',
       typeof callback,
     ]),
-    setOnToggleFavorite: (callback) => calls.push([
-      'favoriteCallback',
+    setOnStateChange: (callback) => calls.push([
+      'stateCallback',
       typeof callback,
     ]),
     getCurrentCardId: () => currentId,
@@ -69,7 +81,7 @@ test('ui initializes one slider and forwards navigation', async () => {
 
   assert.deepEqual(calls, [
     ['editCallback', 'function'],
-    ['favoriteCallback', 'function'],
+    ['stateCallback', 'function'],
     ['init', 2],
     ['next'],
     ['previous'],
@@ -189,21 +201,24 @@ test('general empty state disappears after the first card is added or imported',
   );
 });
 
-test('favorite callback returns the card confirmed by persistence', async () => {
+test('slider state selects the authoritative card favorite value', () => {
   const calls = [];
   const document = createDocument();
-  const updated = { id: 'card-1', favorite: true };
-  let favoriteCallback;
+  let stateCallback;
   const slider = {
-    ...createSliderSpy(calls, 'card-1'),
-    setOnToggleFavorite(callback) {
-      favoriteCallback = callback;
+    ...createSliderSpy(calls),
+    setOnStateChange(callback) {
+      stateCallback = callback;
     },
   };
+  const items = [
+    { id: 'card-1', favorite: false },
+    { id: 'card-2', favorite: true },
+  ];
   const ui = createUI({
     cardsModel: {
-      getAll: () => [{ id: 'card-1', favorite: false }],
-      update: async () => updated,
+      getAll: () => items,
+      getById: (id) => items.find(card => card.id === id) || null,
     },
     slider,
     localStorage: { getItem: () => null, setItem() {} },
@@ -211,7 +226,112 @@ test('favorite callback returns the card confirmed by persistence', async () => 
   });
   ui.init();
 
-  const result = await favoriteCallback('card-1', true);
+  stateCallback({ currentCardId: 'card-2', busy: false });
 
-  assert.equal(result, updated);
+  assert.equal(document.nodes['btn-card-favorite'].textContent, '★');
+  assert.equal(
+    document.nodes['btn-card-favorite'].getAttribute('aria-pressed'),
+    'true'
+  );
+});
+
+test('current favorite waits for persistence and updates only that card', async () => {
+  const calls = [];
+  const document = createDocument();
+  const items = [{ id: 'card-1', favorite: false }];
+  let stateCallback;
+  let saved;
+  const slider = {
+    ...createSliderSpy(calls, 'card-1'),
+    setOnStateChange(callback) {
+      stateCallback = callback;
+    },
+  };
+  const ui = createUI({
+    cardsModel: {
+      getAll: () => items,
+      getById: (id) => items.find(card => card.id === id) || null,
+      async update(id, updates) {
+        saved = [id, updates];
+        items[0] = { ...items[0], ...updates };
+        return items[0];
+      },
+    },
+    slider,
+    localStorage: { getItem: () => null, setItem() {} },
+    document,
+  });
+  ui.init();
+  stateCallback({ currentCardId: 'card-1', busy: false });
+
+  const result = await ui.toggleCurrentFavorite();
+
+  assert.equal(result, true);
+  assert.deepEqual(saved, ['card-1', { favorite: true }]);
+  assert.equal(document.nodes['btn-card-favorite'].textContent, '★');
+});
+
+test('busy slider disables the current-card favorite button', () => {
+  const calls = [];
+  const document = createDocument();
+  let stateCallback;
+  const slider = {
+    ...createSliderSpy(calls),
+    setOnStateChange(callback) {
+      stateCallback = callback;
+    },
+  };
+  const item = { id: 'card-1', favorite: false };
+  const ui = createUI({
+    cardsModel: {
+      getAll: () => [item],
+      getById: () => item,
+    },
+    slider,
+    localStorage: { getItem: () => null, setItem() {} },
+    document,
+  });
+  ui.init();
+
+  stateCallback({ currentCardId: 'card-1', busy: true });
+
+  assert.equal(document.nodes['btn-card-favorite'].disabled, true);
+});
+
+test('failed favorite persistence keeps the confirmed icon', async () => {
+  const calls = [];
+  const document = createDocument();
+  const item = { id: 'card-1', favorite: false };
+  let stateCallback;
+  const slider = {
+    ...createSliderSpy(calls, 'card-1'),
+    setOnStateChange(callback) {
+      stateCallback = callback;
+    },
+  };
+  const ui = createUI({
+    cardsModel: {
+      getAll: () => [item],
+      getById: () => item,
+      update: async () => { throw new Error('save failed'); },
+    },
+    slider,
+    localStorage: { getItem: () => null, setItem() {} },
+    document,
+  });
+  ui.init();
+  stateCallback({ currentCardId: 'card-1', busy: false });
+  const originalConsoleError = console.error;
+  console.error = () => {};
+
+  let result;
+  try {
+    result = await ui.toggleCurrentFavorite();
+  } finally {
+    console.error = originalConsoleError;
+  }
+
+  assert.equal(result, false);
+  assert.equal(document.nodes['btn-card-favorite'].textContent, '☆');
+  assert.equal(document.nodes['btn-card-favorite'].disabled, false);
 });
