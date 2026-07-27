@@ -195,98 +195,54 @@ test('active card flips on click and a navigated card starts unflipped', async (
   );
 });
 
-test('favorite control stays mounted while the virtual window is rebuilt', async () => {
-  const harness = createSliderHarness();
-  const slider = createCardSlider(harness.dependencies);
-  slider.init([
-    { ...makeCards(1)[0], favorite: false },
-    { ...makeCards(2)[1], favorite: true },
-  ]);
-  const button = harness.favoriteButton;
-
-  assert.equal(harness.list.querySelector('.star'), null);
-  assert.equal(button.textContent, '☆');
-
-  await slider.next();
-
-  assert.equal(harness.favoriteButton, button);
-  assert.equal(button.textContent, '★');
-  assert.equal(button['aria-pressed'], 'true');
-});
-
-test('favorite control is hidden without a current card', () => {
-  const harness = createSliderHarness();
-
-  createCardSlider(harness.dependencies).init([]);
-
-  assert.equal(harness.favoriteButton.classList.contains('hidden'), true);
-});
-
-test('favorite button toggles only the confirmed current card', async () => {
-  const harness = createSliderHarness();
-  const slider = createCardSlider(harness.dependencies);
-  const calls = [];
-  slider.setOnToggleFavorite(async (id, value) => {
-    calls.push([id, value]);
-    return { id, favorite: value };
-  });
-  slider.init(makeCards(2).map(card => ({ ...card, favorite: false })));
-
-  await harness.clickFavorite();
-
-  assert.deepEqual(calls, [['card-1', true]]);
-  assert.equal(harness.favoriteButton.textContent, '★');
-  assert.equal(
-    harness.activeFront().parentNode.classList.contains('flipped'),
-    false
-  );
-});
-
-test('favorite button keeps its confirmed state when persistence fails', async () => {
-  const harness = createSliderHarness();
-  const slider = createCardSlider(harness.dependencies);
-  let attempts = 0;
-  slider.setOnToggleFavorite(async () => {
-    attempts += 1;
-    throw new Error('save failed');
-  });
-  slider.init(makeCards(1).map(card => ({ ...card, favorite: false })));
-  const originalConsoleError = console.error;
-  console.error = () => {};
-
-  try {
-    await harness.clickFavorite();
-  } finally {
-    console.error = originalConsoleError;
-  }
-
-  assert.equal(attempts, 1);
-  assert.equal(harness.favoriteButton.textContent, '☆');
-  assert.equal(harness.favoriteButton['aria-pressed'], 'false');
-});
-
-test('favorite button is disabled until navigation confirms the new card', async () => {
+test('slider reports the confirmed card and busy navigation state', async () => {
   const harness = createSliderHarness({}, { reducedMotion: false });
   const slider = createCardSlider(harness.dependencies);
+  const states = [];
+  slider.setOnStateChange((state) => states.push(state));
   slider.init(makeCards(2));
 
   const movement = slider.next();
-  assert.equal(harness.favoriteButton.disabled, true);
+  assert.deepEqual(states.at(-1), {
+    currentCardId: 'card-1',
+    busy: true,
+  });
 
   await harness.finishAnimation();
   await movement;
 
-  assert.equal(harness.favoriteButton.disabled, false);
+  assert.deepEqual(states.at(-1), {
+    currentCardId: 'card-2',
+    busy: false,
+  });
 });
 
-test('favorite control hides on the back and returns on the front', async () => {
+test('cancelled drag restores an idle state for the confirmed card', () => {
   const harness = createSliderHarness();
   const slider = createCardSlider(harness.dependencies);
-  slider.init(makeCards(1));
+  const states = [];
+  slider.setOnStateChange((state) => states.push(state));
+  slider.init(makeCards(2));
 
-  await harness.clickActiveCard();
-  assert.equal(harness.favoriteButton.classList.contains('hidden'), true);
+  harness.pointerDown(100);
+  harness.cancelPointer();
 
-  await harness.clickActiveCard();
-  assert.equal(harness.favoriteButton.classList.contains('hidden'), false);
+  assert.deepEqual(states.at(-1), {
+    currentCardId: 'card-1',
+    busy: false,
+  });
+});
+
+test('empty slider reports no current card', () => {
+  const harness = createSliderHarness();
+  const slider = createCardSlider(harness.dependencies);
+  const states = [];
+  slider.setOnStateChange((state) => states.push(state));
+
+  slider.init([]);
+
+  assert.deepEqual(states.at(-1), {
+    currentCardId: null,
+    busy: false,
+  });
 });

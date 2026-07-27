@@ -117,7 +117,6 @@ export function createSliderHarness(initialStorage = {}, options = {}) {
   const counter = createNode();
   const previousButton = createNode('button');
   const nextButton = createNode('button');
-  const favoriteButton = createNode('button');
   const documentNode = createNode('document');
   const document = {
     createElement: (tagName) => createNode(tagName),
@@ -157,7 +156,6 @@ export function createSliderHarness(initialStorage = {}, options = {}) {
         counter,
         previousButton,
         nextButton,
-        favoriteButton,
       },
       storage,
       document,
@@ -168,7 +166,6 @@ export function createSliderHarness(initialStorage = {}, options = {}) {
     storage,
     list,
     counter,
-    favoriteButton,
     activeText: () => activeFront()?.children[0].textContent,
     activeFront,
     activeBack,
@@ -177,13 +174,6 @@ export function createSliderHarness(initialStorage = {}, options = {}) {
       return list.dispatchEvent({
         type: 'click',
         target: activeFront(),
-        stopPropagation() {},
-      });
-    },
-    clickFavorite() {
-      return favoriteButton.dispatchEvent({
-        type: 'click',
-        target: favoriteButton,
         stopPropagation() {},
       });
     },
