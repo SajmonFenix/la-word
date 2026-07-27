@@ -16,3 +16,19 @@ test('app shell loads one ES module entrypoint', () => {
 
   assert.deepEqual(scripts, ['<script type="module" src="js/app.js">']);
 });
+
+test('bottom navigation orders favorites, add, and current favorite controls', () => {
+  const html = fs.readFileSync(new URL('../index.html', import.meta.url), 'utf8');
+  const group = html.match(/<div class="nav-center">([\s\S]*?)<\/div>/)?.[1] || '';
+
+  assert.ok(group.indexOf('id="btn-favorites-view"') !== -1);
+  assert.ok(
+    group.indexOf('id="btn-add"')
+      > group.indexOf('id="btn-favorites-view"')
+  );
+  assert.ok(
+    group.indexOf('id="btn-card-favorite"')
+      > group.indexOf('id="btn-add"')
+  );
+  assert.match(group, /aria-hidden="true"/);
+});

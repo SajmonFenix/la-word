@@ -84,36 +84,6 @@ body {
   line-height: 1;
 }
 
-#btn-add {
-  width: 56px;
-  height: 56px;
-  border: none;
-  background: var(--primary);
-  color: white;
-  border-radius: 50%;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: background 0.2s, transform 0.15s;
-  flex-shrink: 0;
-  box-shadow: 0 8px 24px rgba(47, 111, 177, 0.36);
-}
-
-#btn-add svg {
-  width: 26px;
-  height: 26px;
-  fill: none;
-  stroke: currentColor;
-  stroke-width: 2.5;
-  stroke-linecap: round;
-}
-
-#btn-add:active {
-  background: var(--primary-strong);
-  transform: scale(0.92);
-}
-
 .header-actions {
   display: flex;
   gap: 8px;
@@ -518,17 +488,70 @@ body {
   letter-spacing: 0;
 }
 
-#btn-add {
+.nav-center {
   position: absolute;
   left: 50%;
-  bottom: max(72px, calc(56px + env(safe-area-inset-bottom)));
+  bottom: max(62px, calc(46px + env(safe-area-inset-bottom)));
   transform: translateX(-50%);
-  width: clamp(96px, 27vw, 124px);
-  height: clamp(96px, 27vw, 124px);
+  display: flex;
+  align-items: center;
+  gap: clamp(12px, 4vw, 20px);
+  pointer-events: auto;
+}
+
+.nav-secondary {
+  width: clamp(48px, 14vw, 62px);
+  height: clamp(48px, 14vw, 62px);
+  border: none;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.16);
+  color: rgba(255, 255, 255, 0.88);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  font-size: clamp(22px, 6vw, 30px);
+  line-height: 1;
+  cursor: pointer;
+  pointer-events: auto;
+  transition: background 0.2s, transform 0.15s;
+}
+
+.nav-secondary svg {
+  width: 46%;
+  height: 46%;
+}
+
+.nav-secondary[aria-pressed="true"] {
+  background: rgba(255, 255, 255, 0.32);
+  color: white;
+}
+
+.nav-secondary:active {
+  background: rgba(255, 255, 255, 0.28);
+  transform: scale(0.92);
+}
+
+.nav-secondary:disabled {
+  cursor: default;
+}
+
+#btn-add {
+  position: static;
+  width: clamp(80px, 23vw, 104px);
+  height: clamp(80px, 23vw, 104px);
+  border: none;
+  border-radius: 50%;
   background: white;
   color: #111827;
-  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 14px 30px rgba(0, 0, 0, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  cursor: pointer;
   pointer-events: auto;
+  transition: background 0.2s, transform 0.15s;
 }
 
 #btn-add svg {
@@ -539,7 +562,7 @@ body {
 
 #btn-add:active {
   background: #f6f6f6;
-  transform: translateX(-50%) scale(0.94);
+  transform: scale(0.94);
 }
 
 /* ── Modal ── */
@@ -1113,62 +1136,6 @@ body {
 }
 
 /* ── Favorites ── */
-
-#btn-fav {
-  position: absolute;
-  left: 50%;
-  bottom: max(12px, calc(4px + env(safe-area-inset-bottom)));
-  transform: translateX(-50%);
-  width: clamp(40px, 11vw, 56px);
-  height: clamp(40px, 11vw, 56px);
-  border: none;
-  background: rgba(255, 255, 255, 0.16);
-  color: rgba(255, 255, 255, 0.8);
-  font-size: clamp(18px, 4.5vw, 24px);
-  border-radius: 50%;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: background 0.2s, transform 0.15s;
-  pointer-events: auto;
-  line-height: 1;
-}
-
-#btn-fav:active {
-  background: rgba(255, 255, 255, 0.28);
-  transform: translateX(-50%) scale(0.92);
-}
-
-.card-favorite {
-  position: absolute;
-  left: calc(
-    50% + (var(--slide-width) / 2) - 10px - clamp(8px, 2.5vw, 16px)
-  );
-  top: calc(
-    50% + (var(--card-height) / 2) - clamp(12px, 3vw, 20px)
-  );
-  transform: translate(-100%, -100%);
-  border: none;
-  background: transparent;
-  font-size: clamp(16px, 3.5vw, 24px);
-  color: white;
-  opacity: 0.7;
-  cursor: pointer;
-  z-index: 3;
-  line-height: 1;
-  padding: 6px;
-  user-select: none;
-  -webkit-tap-highlight-color: transparent;
-}
-
-.card-favorite[aria-pressed="true"] {
-  opacity: 1;
-}
-
-.card-favorite:disabled {
-  cursor: default;
-}
 
 #favorites-empty-state {
   text-align: center;

@@ -55,10 +55,14 @@ test('card navigation keeps every slide at a constant scale and opacity', () => 
   assert.doesNotMatch(neighborRule, /opacity\s*:/);
 });
 
-test('favorite control is stable outside virtual slides', () => {
-  const favoriteRule = getRule('.card-favorite');
+test('bottom navigation uses a stable three-button center group', () => {
+  const centerRule = getRule('.nav-center');
+  const addRule = getRule('#btn-add');
+  const sideRule = getRule('.nav-secondary');
 
-  assert.match(favoriteRule, /position:\s*absolute/);
-  assert.match(favoriteRule, /z-index:\s*3/);
-  assert.doesNotMatch(css, /\.splide__slide\s+\.star\s*\{/);
+  assert.match(centerRule, /display:\s*flex/);
+  assert.match(centerRule, /left:\s*50%/);
+  assert.match(addRule, /clamp\(80px,\s*23vw,\s*104px\)/);
+  assert.match(sideRule, /clamp\(48px,\s*14vw,\s*62px\)/);
+  assert.doesNotMatch(css, /\.card-favorite\s*\{/);
 });
