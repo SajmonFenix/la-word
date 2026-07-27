@@ -221,3 +221,60 @@ test('favorite control is hidden without a current card', () => {
 
   assert.equal(harness.favoriteButton.classList.contains('hidden'), true);
 });
+
+test('favorite button toggles only the confirmed current card', async () => {
+  const harness = createSliderHarness();
+  const slider = createCardSlider(harness.dependencies);
+  const calls = [];
+  slider.setOnToggleFavorite(async (id, value) => {
+    calls.push([id, value]);
+    return { id, favorite: value };
+  });
+  slider.init(makeCards(2).map(card => ({ ...card, favorite: false })));
+
+  await harness.clickFavorite();
+
+  assert.deepEqual(calls, [['card-1', true]]);
+  assert.equal(harness.favoriteButton.textContent, '★');
+  assert.equal(
+    harness.activeFront().parentNode.classList.contains('flipped'),
+    false
+  );
+});
+
+test('favorite button keeps its confirmed state when persistence fails', async () => {
+  const harness = createSliderHarness();
+  const slider = createCardSlider(harness.dependencies);
+  let attempts = 0;
+  slider.setOnToggleFavorite(async () => {
+    attempts += 1;
+    throw new Error('save failed');
+  });
+  slider.init(makeCards(1).map(card => ({ ...card, favorite: false })));
+  const originalConsoleError = console.error;
+  console.error = () => {};
+
+  try {
+    await harness.clickFavorite();
+  } finally {
+    console.error = originalConsoleError;
+  }
+
+  assert.equal(attempts, 1);
+  assert.equal(harness.favoriteButton.textContent, '☆');
+  assert.equal(harness.favoriteButton['aria-pressed'], 'false');
+});
+
+test('favorite button is disabled until navigation confirms the new card', async () => {
+  const harness = createSliderHarness({}, { reducedMotion: false });
+  const slider = createCardSlider(harness.dependencies);
+  slider.init(makeCards(2));
+
+  const movement = slider.next();
+  assert.equal(harness.favoriteButton.disabled, true);
+
+  await harness.finishAnimation();
+  await movement;
+
+  assert.equal(harness.favoriteButton.disabled, false);
+});

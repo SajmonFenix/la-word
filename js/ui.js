@@ -50,8 +50,9 @@ export function createUI({
   }
 
   async function handleToggleFavorite(id, value) {
-    await cardsModel.update(id, { favorite: value });
+    const updated = await cardsModel.update(id, { favorite: value });
     if (favoritesActive) api.refresh();
+    return updated;
   }
 
   const api = {

@@ -57,7 +57,9 @@ function createNode(tagName = 'div') {
     },
     dispatchEvent(event) {
       event.currentTarget = this;
-      listeners.get(event.type)?.forEach((listener) => listener(event));
+      const results = [...(listeners.get(event.type) || [])]
+        .map((listener) => listener(event));
+      return Promise.all(results);
     },
     setPointerCapture() {},
     releasePointerCapture() {},
@@ -172,9 +174,16 @@ export function createSliderHarness(initialStorage = {}, options = {}) {
     activeBack,
     activeFace: activeFront,
     clickActiveCard() {
-      list.dispatchEvent({
+      return list.dispatchEvent({
         type: 'click',
         target: activeFront(),
+        stopPropagation() {},
+      });
+    },
+    clickFavorite() {
+      return favoriteButton.dispatchEvent({
+        type: 'click',
+        target: favoriteButton,
         stopPropagation() {},
       });
     },

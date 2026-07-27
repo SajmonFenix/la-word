@@ -29,6 +29,8 @@ export function createCardSlider({
   let axis = null;
   let animationDelta = 0;
   let animationResolve = null;
+  let favoritePending = false;
+  let currentCardFlipped = false;
 
   let listenersBound = false;
   let suppressClick = false;
@@ -85,7 +87,13 @@ export function createCardSlider({
   function syncFavoriteButton() {
     const card = items[currentIndex];
     const isFavorite = Boolean(card?.favorite);
-    elements.favoriteButton.classList.toggle('hidden', !card);
+    elements.favoriteButton.classList.toggle(
+      'hidden',
+      !card || currentCardFlipped
+    );
+    elements.favoriteButton.disabled = !card
+      || phase !== 'idle'
+      || favoritePending;
     elements.favoriteButton.textContent = isFavorite ? '★' : '☆';
     elements.favoriteButton.setAttribute('aria-pressed', String(isFavorite));
     elements.favoriteButton.setAttribute(
@@ -97,6 +105,7 @@ export function createCardSlider({
   }
 
   function renderWindow() {
+    currentCardFlipped = false;
     const entries = buildSliderWindow(items, currentIndex);
     const centerSlot = Math.max(
       0,
@@ -170,6 +179,7 @@ export function createCardSlider({
     if (delta) commitIndex(currentIndex + delta);
     resetVisualPosition();
     phase = 'idle';
+    syncFavoriteButton();
     resolve?.(Boolean(delta));
   }
 
@@ -183,6 +193,7 @@ export function createCardSlider({
     animationDelta = delta;
     elements.list.classList.remove('is-dragging');
     elements.list.classList.add('is-animating');
+    syncFavoriteButton();
     for (const slide of elements.list.children) {
       const newOffset = parseInt(slide.dataset.offset, 10) - delta;
       slide.dataset.offset = String(newOffset);
@@ -208,6 +219,7 @@ export function createCardSlider({
     animationDelta = 0;
     elements.list.classList.remove('is-dragging');
     elements.list.classList.add('is-animating');
+    syncFavoriteButton();
     elements.list.style.setProperty('--drag-offset', '0px');
     const promise = new Promise((resolve) => {
       animationResolve = resolve;
@@ -222,6 +234,7 @@ export function createCardSlider({
     axis = null;
     if (phase !== 'animating') phase = 'idle';
     resetVisualPosition();
+    syncFavoriteButton();
   }
 
   function handlePointer(event) {
@@ -238,6 +251,7 @@ export function createCardSlider({
       };
       axis = null;
       phase = 'dragging';
+      syncFavoriteButton();
       try { elements.list.setPointerCapture?.(event.pointerId); } catch {}
       return;
     }
@@ -280,7 +294,10 @@ export function createCardSlider({
       axis = null;
       phase = 'idle';
       if (shouldMove) animateBy(dx < 0 ? 1 : -1);
-      else if (wasHorizontal) resetVisualPosition();
+      else {
+        if (wasHorizontal) resetVisualPosition();
+        syncFavoriteButton();
+      }
     }
   }
 
@@ -301,6 +318,35 @@ export function createCardSlider({
     }
   }
 
+  async function handleFavoriteClick(event) {
+    event.stopPropagation();
+    if (phase !== 'idle' || favoritePending) return;
+    const card = items[currentIndex];
+    if (!card) return;
+
+    favoritePending = true;
+    syncFavoriteButton();
+    try {
+      const updated = await onToggleFavorite?.(
+        card.id,
+        !Boolean(card.favorite)
+      );
+      if (!updated) return;
+      const index = items.findIndex((item) => item.id === card.id);
+      if (index !== -1) {
+        items[index] = {
+          ...items[index],
+          favorite: Boolean(updated.favorite),
+        };
+      }
+    } catch (error) {
+      console.error('Nepodarilo sa zmeniť obľúbenú kartu:', error);
+    } finally {
+      favoritePending = false;
+      syncFavoriteButton();
+    }
+  }
+
   function bindEvents() {
     if (listenersBound) return;
     listenersBound = true;
@@ -310,6 +356,7 @@ export function createCardSlider({
     });
     elements.list.addEventListener('click', handleClick);
     elements.list.addEventListener('transitionend', finishAnimation);
+    elements.favoriteButton.addEventListener('click', handleFavoriteClick);
     document.addEventListener('visibilitychange', handleVisibilityChange);
   }
 
@@ -322,6 +369,7 @@ export function createCardSlider({
     });
     elements.list.removeEventListener('click', handleClick);
     elements.list.removeEventListener('transitionend', finishAnimation);
+    elements.favoriteButton.removeEventListener('click', handleFavoriteClick);
     document.removeEventListener('visibilitychange', handleVisibilityChange);
   }
 

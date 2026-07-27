@@ -188,3 +188,30 @@ test('general empty state disappears after the first card is added or imported',
     true
   );
 });
+
+test('favorite callback returns the card confirmed by persistence', async () => {
+  const calls = [];
+  const document = createDocument();
+  const updated = { id: 'card-1', favorite: true };
+  let favoriteCallback;
+  const slider = {
+    ...createSliderSpy(calls, 'card-1'),
+    setOnToggleFavorite(callback) {
+      favoriteCallback = callback;
+    },
+  };
+  const ui = createUI({
+    cardsModel: {
+      getAll: () => [{ id: 'card-1', favorite: false }],
+      update: async () => updated,
+    },
+    slider,
+    localStorage: { getItem: () => null, setItem() {} },
+    document,
+  });
+  ui.init();
+
+  const result = await favoriteCallback('card-1', true);
+
+  assert.equal(result, updated);
+});
