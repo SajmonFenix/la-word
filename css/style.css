@@ -263,6 +263,8 @@ body {
 }
 
 .splide {
+  --slide-width: min(66vw, 340px);
+  --card-height: max(300px, min(52vh, 460px));
   width: 100vw;
   height: min(58vh, 520px);
   min-height: 330px;
@@ -271,6 +273,7 @@ body {
 }
 
 .splide__track {
+  position: relative;
   overflow: visible;
   height: 100%;
   width: 100%;
@@ -278,7 +281,6 @@ body {
 }
 
 .splide__list {
-  --slide-width: min(66vw, 340px);
   --slide-gap: clamp(22px, 7vw, 42px);
   --slide-step: calc(var(--slide-width) + var(--slide-gap));
   --center-slot: 2;
@@ -321,8 +323,7 @@ body {
 
 .splide__slide .card {
   width: 100%;
-  height: min(52vh, 460px);
-  min-height: 300px;
+  height: var(--card-height);
   cursor: pointer;
   position: relative;
   transform-style: preserve-3d;
@@ -1139,23 +1140,34 @@ body {
   transform: translateX(-50%) scale(0.92);
 }
 
-.splide__slide .star {
+.card-favorite {
   position: absolute;
-  bottom: clamp(12px, 3vw, 20px);
-  right: clamp(8px, 2.5vw, 16px);
+  left: calc(
+    50% + (var(--slide-width) / 2) - 10px - clamp(8px, 2.5vw, 16px)
+  );
+  top: calc(
+    50% + (var(--card-height) / 2) - clamp(12px, 3vw, 20px)
+  );
+  transform: translate(-100%, -100%);
+  border: none;
+  background: transparent;
   font-size: clamp(16px, 3.5vw, 24px);
   color: white;
   opacity: 0.7;
   cursor: pointer;
-  z-index: 2;
+  z-index: 3;
   line-height: 1;
   padding: 6px;
   user-select: none;
   -webkit-tap-highlight-color: transparent;
 }
 
-.splide__slide .card.flipped .star {
-  display: none;
+.card-favorite[aria-pressed="true"] {
+  opacity: 1;
+}
+
+.card-favorite:disabled {
+  cursor: default;
 }
 
 #favorites-empty-state {

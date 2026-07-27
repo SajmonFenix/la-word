@@ -278,3 +278,15 @@ test('favorite button is disabled until navigation confirms the new card', async
 
   assert.equal(harness.favoriteButton.disabled, false);
 });
+
+test('favorite control hides on the back and returns on the front', async () => {
+  const harness = createSliderHarness();
+  const slider = createCardSlider(harness.dependencies);
+  slider.init(makeCards(1));
+
+  await harness.clickActiveCard();
+  assert.equal(harness.favoriteButton.classList.contains('hidden'), true);
+
+  await harness.clickActiveCard();
+  assert.equal(harness.favoriteButton.classList.contains('hidden'), false);
+});

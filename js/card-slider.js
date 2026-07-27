@@ -314,7 +314,8 @@ export function createCardSlider({
     const slide = event.target.closest?.('.splide__slide');
     const card = event.target.closest?.('.card');
     if (slide?.classList.contains('is-active') && card) {
-      card.classList.toggle('flipped');
+      currentCardFlipped = card.classList.toggle('flipped');
+      syncFavoriteButton();
     }
   }
 

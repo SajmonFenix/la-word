@@ -54,3 +54,11 @@ test('card navigation keeps every slide at a constant scale and opacity', () => 
   assert.doesNotMatch(neighborRule, /scale\s*\(/);
   assert.doesNotMatch(neighborRule, /opacity\s*:/);
 });
+
+test('favorite control is stable outside virtual slides', () => {
+  const favoriteRule = getRule('.card-favorite');
+
+  assert.match(favoriteRule, /position:\s*absolute/);
+  assert.match(favoriteRule, /z-index:\s*3/);
+  assert.doesNotMatch(css, /\.splide__slide\s+\.star\s*\{/);
+});
