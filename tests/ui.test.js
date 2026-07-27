@@ -16,8 +16,10 @@ function createDocument() {
   const nodes = {
     'btn-prev': { classList: classList() },
     'btn-next': { classList: classList() },
+    'btn-fav': { textContent: '☆' },
     'card-area': { classList: classList() },
     'empty-state': { classList: classList() },
+    'favorites-empty-state': { classList: classList() },
   };
   return { getElementById: (id) => nodes[id], nodes };
 }
@@ -36,6 +38,10 @@ function createSliderSpy(calls, currentId = 'card-2') {
     ]),
     setOnEditCard: (callback) => calls.push([
       'editCallback',
+      typeof callback,
+    ]),
+    setOnToggleFavorite: (callback) => calls.push([
+      'favoriteCallback',
       typeof callback,
     ]),
     getCurrentCardId: () => currentId,
@@ -63,6 +69,7 @@ test('ui initializes one slider and forwards navigation', async () => {
 
   assert.deepEqual(calls, [
     ['editCallback', 'function'],
+    ['favoriteCallback', 'function'],
     ['init', 2],
     ['next'],
     ['previous'],
@@ -131,4 +138,53 @@ test('refresh before initialization cannot overwrite restored slider state', () 
   ui.refresh();
 
   assert.deepEqual(calls, []);
+});
+
+test('general empty state disappears after the first card is added or imported', () => {
+  const calls = [];
+  const document = createDocument();
+  let items = [];
+  const ui = createUI({
+    cardsModel: { getAll: () => items },
+    slider: createSliderSpy(calls, null),
+    localStorage: { getItem: () => null, setItem() {} },
+    document,
+  });
+
+  ui.init();
+  assert.equal(
+    document.nodes['empty-state'].classList.contains('hidden'),
+    false
+  );
+
+  items = [{ id: 'card-1', favorite: false }];
+  ui.refresh();
+
+  assert.equal(
+    document.nodes['empty-state'].classList.contains('hidden'),
+    true
+  );
+  assert.equal(
+    document.nodes['favorites-empty-state'].classList.contains('hidden'),
+    true
+  );
+  assert.equal(
+    document.nodes['card-area'].classList.contains('hidden'),
+    false
+  );
+
+  ui.toggleFavorites();
+
+  assert.equal(
+    document.nodes['empty-state'].classList.contains('hidden'),
+    true
+  );
+  assert.equal(
+    document.nodes['favorites-empty-state'].classList.contains('hidden'),
+    false
+  );
+  assert.equal(
+    document.nodes['card-area'].classList.contains('hidden'),
+    true
+  );
 });

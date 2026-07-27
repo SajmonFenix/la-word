@@ -33,16 +33,18 @@ export function createUI({
   }
 
   function updateEmptyState(items) {
+    const isEmpty = items.length === 0;
+    const showFavoritesEmpty = favoritesActive && isEmpty;
+    const showGeneralEmpty = !favoritesActive && isEmpty;
+
     document.getElementById('empty-state')
-      .classList.toggle('hidden', items.length > 0);
+      .classList.toggle('hidden', !showGeneralEmpty);
     document.getElementById('card-area')
-      .classList.toggle('hidden', items.length === 0);
-    const favEmpty = document.getElementById('favorites-empty-state');
-    if (favEmpty) {
-      const showFavEmpty = favoritesActive && items.length === 0;
-      favEmpty.classList.toggle('hidden', !showFavEmpty);
-      document.getElementById('empty-state')
-        .classList.toggle('hidden', showFavEmpty);
+      .classList.toggle('hidden', isEmpty);
+
+    const favoritesEmpty = document.getElementById('favorites-empty-state');
+    if (favoritesEmpty) {
+      favoritesEmpty.classList.toggle('hidden', !showFavoritesEmpty);
     }
   }
 
